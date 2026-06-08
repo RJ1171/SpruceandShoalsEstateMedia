@@ -1,10 +1,12 @@
-# Cloudinary Setup Guide
+import { createClient } from "@supabase/supabase-js";
 
-1. Create upload presets for listing photos, logos, headshots, audio, and exported videos.
-2. Set:
-   - `CLOUDINARY_CLOUD_NAME`
-   - `CLOUDINARY_API_KEY`
-   - `CLOUDINARY_API_SECRET`
-3. Use signed uploads for authenticated dashboard uploads.
-4. Store returned `public_id`, dimensions, duration, bytes, and secure URL in the `Asset` table.
-5. Apply transformations for thumbnails, gallery previews, and social aspect ratios.
+export function getSupabaseClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!url || !anonKey) {
+    throw new Error("Supabase environment variables are not configured.");
+  }
+
+  return createClient(url, anonKey);
+}

@@ -1,17 +1,22 @@
-import type { NextConfig } from "next";
+export type UserRole = "OWNER" | "ADMIN" | "MEMBER" | "VIEWER";
 
-const nextConfig: NextConfig = {
-  images: {
-    remotePatterns: [
-      { protocol: "https", hostname: "res.cloudinary.com" },
-      { protocol: "https", hostname: "image.mux.com" }
-    ]
-  },
-  experimental: {
-    serverActions: {
-      bodySizeLimit: "25mb"
-    }
-  }
+export type AssetType = "PHOTO" | "VIDEO" | "AUDIO" | "LOGO" | "HEADSHOT" | "BRAND_ASSET";
+
+export type VideoFormat = "VERTICAL" | "HORIZONTAL" | "SQUARE";
+
+export type ProjectStatus = "DRAFT" | "UPLOADING" | "GENERATING" | "READY" | "EXPORTED" | "ARCHIVED";
+
+export type PropertyDetails = {
+  address: string;
+  price?: number;
+  bedrooms?: number;
+  bathrooms?: number;
+  squareFeet?: number;
+  description?: string;
 };
 
-export default nextConfig;
+export type AiGenerationRequest = {
+  property: PropertyDetails;
+  tone: "MLS" | "LUXURY" | "SOCIAL" | "OPEN_HOUSE";
+  brandProfileId?: string;
+};

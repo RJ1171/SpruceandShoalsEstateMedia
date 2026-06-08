@@ -1,7 +1,17 @@
-import * as Sentry from "@sentry/nextjs";
+import type { NextConfig } from "next";
 
-Sentry.init({
-  dsn: process.env.SENTRY_DSN,
-  tracesSampleRate: process.env.NODE_ENV === "production" ? 0.1 : 1,
-  environment: process.env.NODE_ENV
-});
+const nextConfig: NextConfig = {
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "res.cloudinary.com" },
+      { protocol: "https", hostname: "image.mux.com" }
+    ]
+  },
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "25mb"
+    }
+  }
+};
+
+export default nextConfig;

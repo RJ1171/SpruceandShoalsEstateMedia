@@ -1,13 +1,10 @@
-import { PrismaClient } from "@prisma/client";
+import { v2 as cloudinary } from "cloudinary";
 
-const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+  secure: true
+});
 
-export const prisma =
-  globalForPrisma.prisma ??
-  new PrismaClient({
-    log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"]
-  });
-
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prisma;
-}
+export { cloudinary };

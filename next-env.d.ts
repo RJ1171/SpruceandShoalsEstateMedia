@@ -1,6 +1,26 @@
-/// <reference types="next" />
-/// <reference types="next/image-types/global" />
-/// <reference path="./.next/types/routes.d.ts" />
+NEXT_PUBLIC_APP_URL=
 
-// NOTE: This file should not be edited
-// see https://nextjs.org/docs/app/api-reference/config/typescript for more information.
+DATABASE_URL=
+
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
+CLERK_SECRET_KEY=
+
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+
+OPENAI_API_KEY=
+
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
+
+MUX_TOKEN_ID=
+MUX_TOKEN_SECRET=
+
+RESEND_API_KEY=
+
+POSTHOG_KEY=
+NEXT_PUBLIC_POSTHOG_KEY=
+NEXT_PUBLIC_GA_MEASUREMENT_ID=
+
+SENTRY_DSN=
