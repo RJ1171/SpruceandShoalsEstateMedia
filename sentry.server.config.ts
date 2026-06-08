@@ -1,49 +1,33 @@
-{
-  "name": "spruce-shoals-estate-media",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
-    "typecheck": "tsc --noEmit",
-    "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev"
-  },
-  "dependencies": {
-    "@clerk/nextjs": "latest",
-    "@hookform/resolvers": "latest",
-    "@prisma/client": "6.19.3",
-    "@react-email/components": "latest",
-    "@sentry/nextjs": "latest",
-    "@supabase/supabase-js": "latest",
-    "class-variance-authority": "latest",
-    "cloudinary": "latest",
-    "clsx": "latest",
-    "framer-motion": "latest",
-    "lucide-react": "latest",
-    "next": "15.5.19",
-    "openai": "latest",
-    "posthog-js": "latest",
-    "prisma": "6.19.3",
-    "react": "19.2.3",
-    "react-dom": "19.2.3",
-    "react-email": "latest",
-    "react-hook-form": "latest",
-    "resend": "latest",
-    "tailwind-merge": "latest",
-    "zod": "latest"
-  },
-  "devDependencies": {
-    "@types/node": "latest",
-    "@types/react": "latest",
-    "@types/react-dom": "latest",
-    "autoprefixer": "latest",
-    "eslint": "latest",
-    "eslint-config-next": "15.5.19",
-    "postcss": "latest",
-    "tailwindcss": "3.4.17",
-    "typescript": "latest"
-  }
-}
+# Estate Reel Studio
+
+A production-oriented AI real estate media platform scaffold for luxury listing teams. It includes an original New England-inspired brand system, polished landing page, authenticated dashboard, project workflow, media library, brand center, video studio, admin panel, Prisma schema, AI routes, video generation architecture, email templates, analytics hooks, and deployment documentation.
+
+## Brand
+
+All editable brand defaults live in `config/brand.ts`.
+
+## Core Directories
+
+- `app`: Next.js routes, dashboard, admin, and API handlers
+- `components`: shared UI and product components
+- `lib`: service clients and orchestration helpers
+- `hooks`: reusable client hooks
+- `actions`: server actions
+- `types`: platform types
+- `emails`: React Email templates
+- `public`: static assets
+- `prisma`: database schema
+- `config`: brand and product configuration
+- `docs`: deployment and setup guides
+
+## Quick Start
+
+```bash
+npm install
+cp .env.example .env.local
+npm run prisma:generate
+npm run prisma:migrate
+npm run dev
+```
+
+See `docs/local-setup.md` and `docs/production-deployment.md` for full setup.

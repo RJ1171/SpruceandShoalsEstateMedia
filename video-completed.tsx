@@ -1,34 +1,11 @@
-"use client";
+import { Card } from "@/components/ui/card";
 
-import Script from "next/script";
-import posthog from "posthog-js";
-import { useEffect } from "react";
-
-export function Analytics() {
-  useEffect(() => {
-    const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
-
-    if (key && typeof window !== "undefined") {
-      posthog.init(key, {
-        api_host: "https://app.posthog.com",
-        capture_pageview: true
-      });
-    }
-  }, []);
-
-  const gaId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
-
-  return gaId ? (
-    <>
-      <Script src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`} strategy="afterInteractive" />
-      <Script id="google-analytics" strategy="afterInteractive">
-        {`
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-          gtag('config', '${gaId}');
-        `}
-      </Script>
-    </>
-  ) : null;
+export function MetricCard({ label, value, detail }: { label: string; value: string; detail: string }) {
+  return (
+    <Card className="p-5">
+      <p className="text-sm font-medium text-charcoal/60">{label}</p>
+      <p className="mt-3 font-serif text-4xl font-semibold text-pine">{value}</p>
+      <p className="mt-2 text-xs uppercase tracking-[0.16em] text-gold">{detail}</p>
+    </Card>
+  );
 }

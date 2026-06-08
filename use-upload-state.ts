@@ -1,317 +1,212 @@
-import Image from "next/image";
-import Link from "next/link";
-import {
-  ArrowRight,
-  BadgeCheck,
-  Building2,
-  Captions,
-  ChevronDown,
-  Clapperboard,
-  FileText,
-  Image as ImageIcon,
-  Layers3,
-  Menu,
-  Mic2,
-  Palette,
-  PenLine,
-  Play,
-  Share2,
-  Sparkles,
-  UploadCloud,
-  Wand2,
-  type LucideIcon
-} from "lucide-react";
-import { brand } from "@/config/brand";
-import { buttonClassName } from "@/components/ui/button";
+"use client";
+
+import { ChangeEvent, useMemo, useState } from "react";
+import { BadgeCheck, FileAudio, FileText, Image as ImageIcon, Palette, Sparkles, UploadCloud, Video, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { SectionHeading } from "@/components/section-heading";
 
-type IconCard = [string, string, LucideIcon];
+type UploadItem = {
+  id: string;
+  file: File;
+  previewUrl?: string;
+  kind: "image" | "video" | "audio" | "document" | "other";
+};
 
-const trustCards = [
-  ["Listing Videos", "Listing-ready video workflows from uploaded photos."],
-  ["Social Assets", "Captioned reels, posts, and channel-specific formats."],
-  ["Branded Templates", "Reusable visual systems for agents and teams."],
-  ["Faster Turnaround", "A calmer path from source files to polished exports."]
-];
-
-const services: IconCard[] = [
-  ["AI Property Videos", "Create refined listing videos from uploaded photography and details.", Clapperboard],
-  ["Listing Photo Enhancement", "Prepare brighter, cleaner, presentation-quality listing imagery.", Wand2],
-  ["Social Media Reels", "Package vertical content for Instagram, Facebook, and short-form channels.", Play],
-  ["Agent Branding Kits", "Save colors, logos, headshots, disclosures, and advisor details.", Palette],
-  ["Property Description Writing", "Draft MLS-friendly, luxury, social, and open house descriptions.", PenLine],
-  ["Voiceover & Script Generation", "Prepare narration scripts and brand-consistent voiceover direction.", Mic2],
-  ["Open House Content", "Create polished launch assets for showings and weekend promotion.", Building2],
-  ["Listing Presentation Assets", "Build client-ready campaign materials from one organized studio.", Layers3]
-];
-
-const process = [
-  ["Upload listing photos", "Add property photography, video clips, logos, and supporting documents."],
-  ["Add property details", "Capture address, price, beds, baths, square footage, and selling points."],
-  ["Choose branding and style", "Apply agent identity, brokerage details, colors, and template direction."],
-  ["Generate, edit, and export", "Prepare video, descriptions, captions, and launch-ready formats."]
-];
-
-const brandPreview = ["Agent logo", "Headshot", "Brand colors", "Brokerage info", "Contact details", "Social handles"];
-
-const features: IconCard[] = [
-  ["Custom branding", "Keep every project aligned with your team identity.", Palette],
-  ["AI-generated scripts", "Narration and social scripts tailored to listing details.", FileText],
-  ["Voiceover options", "Support multiple narration styles and future voice providers.", Mic2],
-  ["Multi-format exports", "Prepare vertical, square, and horizontal formats.", Clapperboard],
-  ["Social captions", "Generate polished captions and posting copy.", Captions],
-  ["MLS-friendly descriptions", "Keep listing copy clear, useful, and editable.", PenLine],
-  ["Image enhancement", "Support future correction, staging, and polish workflows.", Wand2],
-  ["Organized media library", "Store photos, video, audio, logos, and headshots.", ImageIcon],
-  ["Reusable templates", "Create repeatable campaign structures for teams.", Layers3],
-  ["Team-ready workflows", "Support agents, teams, brokerages, and media companies.", Share2]
-];
-
-const testimonials = [
-  ["The final listing package looked like something from a national luxury brokerage.", "Mara Ellison", "Listing Advisor"],
-  ["It made our property marketing feel sharper, faster, and more consistent.", "Colin Reyes", "Team Lead"],
-  ["The brand templates saved us hours every week.", "Nina Caldwell", "Brokerage Marketing"]
-];
-
-const faqs = [
-  ["What does Spruce & Shoals Estate Media create?", "The studio helps prepare property videos, listing descriptions, social captions, branded media packages, and presentation assets."],
-  ["Is this for individual agents or teams?", "Yes. The experience is designed for solo agents, growing teams, brokerages, and real estate media partners."],
-  ["Can I customize the branding?", "Brand profiles can hold logos, colors, typography choices, contact details, social handles, and compliance language."],
-  ["Can I export videos for Instagram and Facebook?", "The architecture supports vertical, square, and horizontal output paths for social and listing channels."],
-  ["Can I use my own photos and logos?", "Yes. The intake flow accepts listing images, videos, audio, logos, headshots, PDFs, and description notes."],
-  ["Can this support multiple listings?", "The project model is built around reusable listing packages and organization-level media libraries."]
-];
-
-function ShowcaseCard({ title, label, tall = false }: { title: string; label: string; tall?: boolean }) {
-  return (
-    <Card className={`corner-frame overflow-hidden p-3 ${tall ? "md:row-span-2" : ""}`}>
-      <div className={`${tall ? "h-96" : "h-48"} rounded-md border border-pine/15 bg-[linear-gradient(135deg,#0F2C25,#F7F3EA_58%,#C6A15B)]`} />
-      <div className="p-5">
-        <p className="text-xs font-bold uppercase tracking-[0.18em] text-gold">{label}</p>
-        <h3 className="mt-3 font-serif text-2xl font-semibold text-pine">{title}</h3>
-        <p className="mt-2 text-sm leading-6 text-charcoal/70">A refined placeholder for luxury property media, before/after visuals, and video preview states.</p>
-      </div>
-    </Card>
-  );
+function getKind(file: File): UploadItem["kind"] {
+  if (file.type.startsWith("image/")) return "image";
+  if (file.type.startsWith("video/")) return "video";
+  if (file.type.startsWith("audio/")) return "audio";
+  if (file.type.includes("pdf") || file.type.includes("document") || file.type.includes("text")) return "document";
+  return "other";
 }
 
-export function LandingPage() {
+function formatSize(bytes: number) {
+  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+}
+
+export function UploadWorkspace({ compact = false }: { compact?: boolean }) {
+  const [items, setItems] = useState<UploadItem[]>([]);
+  const [description, setDescription] = useState("");
+  const [status, setStatus] = useState<"idle" | "ready">("idle");
+
+  const counts = useMemo(
+    () => ({
+      images: items.filter((item) => item.kind === "image").length,
+      media: items.filter((item) => item.kind === "video" || item.kind === "audio").length,
+      documents: items.filter((item) => item.kind === "document").length
+    }),
+    [items]
+  );
+
+  function onFilesSelected(event: ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(event.target.files ?? []);
+    const next = files.map((file) => {
+      const kind = getKind(file);
+      return {
+        id: `${file.name}-${file.lastModified}-${crypto.randomUUID()}`,
+        file,
+        kind,
+        previewUrl: kind === "image" ? URL.createObjectURL(file) : undefined
+      };
+    });
+
+    setItems((current) => [...current, ...next]);
+    setStatus("idle");
+    event.target.value = "";
+  }
+
+  function removeItem(id: string) {
+    setItems((current) => {
+      const item = current.find((entry) => entry.id === id);
+      if (item?.previewUrl) URL.revokeObjectURL(item.previewUrl);
+      return current.filter((entry) => entry.id !== id);
+    });
+  }
+
+  function markReady() {
+    setStatus("ready");
+  }
+
   return (
-    <main className="min-h-screen bg-cream">
-      <nav className="sticky top-0 z-50 border-b border-gold/25 bg-forest/95 text-offWhite shadow-[0_12px_35px_rgba(15,44,37,0.18)] backdrop-blur-xl">
-        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-5">
-          <Link href="/" className="flex items-center gap-3" aria-label={`${brand.name} home`}>
-            <span className="flex h-11 w-11 items-center justify-center rounded-md border border-gold/50 bg-pine font-serif text-xl font-semibold text-gold">S</span>
-            <span>
-              <span className="block font-serif text-xl font-semibold leading-5">{brand.shortName}</span>
-              <span className="block text-[11px] uppercase tracking-[0.22em] text-offWhite/60">Estate Media</span>
-            </span>
-          </Link>
-          <div className="hidden items-center gap-7 text-sm font-medium text-offWhite/80 md:flex">
-            {brand.navigation.map((item) => (
-              <a key={item.href} href={item.href} className="transition hover:text-gold">{item.label}</a>
-            ))}
-            <Link href="/dashboard" className={buttonClassName("gold")}>{brand.ctas.primary}</Link>
-          </div>
-          <details className="relative md:hidden">
-            <summary className="flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-md border border-gold/40 text-gold">
-              <Menu size={20} />
-            </summary>
-            <div className="absolute right-0 top-14 w-64 rounded-lg border border-gold/30 bg-forest p-4 shadow-luxury">
-              {brand.navigation.map((item) => (
-                <a key={item.href} href={item.href} className="block rounded-md px-3 py-2 text-sm text-offWhite/80 hover:bg-pine hover:text-gold">{item.label}</a>
-              ))}
-              <Link href="/dashboard" className={buttonClassName("gold", "mt-3 w-full")}>{brand.ctas.primary}</Link>
+    <div className="grid gap-6 lg:grid-cols-[0.94fr_1.06fr]">
+      <Card className="corner-frame overflow-hidden">
+        <div className="bg-pine px-6 py-5 text-white">
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-gold">Project intake</p>
+          <h2 className="mt-2 font-serif text-3xl font-semibold">Listing media package</h2>
+          <p className="mt-2 max-w-xl text-sm leading-6 text-white/70">Build the source package for videos, descriptions, social posts, and branded listing assets.</p>
+        </div>
+        <div className="gold-rule" />
+        <div className="p-6">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h3 className="font-serif text-2xl font-semibold text-pine">Listing intake</h3>
+              <p className="mt-2 text-sm leading-6 text-charcoal/65">Photos, media, brand files, disclosures, and description notes.</p>
             </div>
-          </details>
-        </div>
-      </nav>
-
-      <section className="mx-auto grid max-w-7xl items-center gap-12 px-5 pb-16 pt-12 md:grid-cols-[0.9fr_1.1fr] md:pt-20">
-        <div className="border-l border-gold pl-6">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-gold/50 bg-white px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-pine">
-            <BadgeCheck size={15} className="text-gold" /> Luxury Listing Media Studio
+            {status === "ready" ? <span className="rounded-md border border-gold/40 bg-cream px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-gold">Ready</span> : null}
           </div>
-          <h1 className="font-serif text-5xl font-semibold leading-[0.95] text-pine md:text-7xl">
-            Refined Real Estate Media for Listings That Deserve More
-          </h1>
-          <div className="my-7 h-px max-w-sm bg-gradient-to-r from-gold via-pine/25 to-transparent" />
-          <p className="max-w-xl text-lg leading-8 text-charcoal/75">
-            Spruce & Shoals Estate Media helps agents, teams, and brokerages turn listing photos into polished video, social content, and elevated marketing assets built for today's market.
-          </p>
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <Link href="/dashboard/studio" className={buttonClassName("primary", "w-full sm:w-auto")}>{brand.ctas.heroPrimary} <ArrowRight size={16} /></Link>
-            <a href="#portfolio" className={buttonClassName("secondary", "w-full sm:w-auto")}><Play size={16} /> {brand.ctas.heroSecondary}</a>
+
+        <label className="group mt-6 flex min-h-48 cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-gold/60 bg-cream px-5 text-center shadow-inner transition hover:border-pine hover:bg-white">
+          <span className="flex h-14 w-14 items-center justify-center rounded-md bg-white text-gold shadow-sm transition group-hover:bg-pine">
+            <UploadCloud size={30} />
+          </span>
+          <span className="mt-3 font-semibold text-pine">Upload listing assets</span>
+          <span className="mt-1 text-sm text-charcoal/60">Images, video, audio, logos, headshots, PDFs, and text files</span>
+          <input className="sr-only" type="file" multiple accept="image/*,video/*,audio/*,.pdf,.txt,.doc,.docx" onChange={onFilesSelected} />
+        </label>
+
+        <div className="mt-5 grid gap-3 sm:grid-cols-3">
+          <div className="outline-tile rounded-md p-3">
+            <ImageIcon size={18} className="text-gold" />
+            <p className="mt-2 text-sm font-semibold text-pine">{counts.images ? "Images added" : "Images"}</p>
+            <p className="mt-1 text-xs text-charcoal/55">Listing photos</p>
+          </div>
+          <div className="outline-tile rounded-md p-3">
+            <Video size={18} className="text-gold" />
+            <p className="mt-2 text-sm font-semibold text-pine">{counts.media ? "Media added" : "Video/audio"}</p>
+            <p className="mt-1 text-xs text-charcoal/55">Voice, clips, music</p>
+          </div>
+          <div className="outline-tile rounded-md p-3">
+            <FileText size={18} className="text-gold" />
+            <p className="mt-2 text-sm font-semibold text-pine">{counts.documents ? "Docs added" : "Documents"}</p>
+            <p className="mt-1 text-xs text-charcoal/55">Copy and PDFs</p>
           </div>
         </div>
-        <div className="corner-frame relative rounded-lg border border-pine/20 bg-white p-3 shadow-luxury">
-          <Image
-            src="/images/luxury-platform-hero.png"
-            alt="Luxury coastal listing with estate media previews"
-            width={1400}
-            height={900}
-            priority
-            className="aspect-[1.35] w-full rounded-md border border-pine/10 object-cover"
-          />
-          <Card className="absolute bottom-7 left-7 max-w-sm border-gold/40 p-4">
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-gold">Media preview</p>
-            <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-              {["Video", "Social", "MLS"].map((item) => (
-                <span key={item} className="rounded-md border border-pine/15 bg-offWhite px-3 py-2 text-xs font-semibold text-pine">{item}</span>
-              ))}
-            </div>
-          </Card>
-        </div>
-      </section>
 
-      <section className="mx-auto max-w-7xl px-5 pb-16">
-        <div className="grid gap-4 md:grid-cols-4">
-          {trustCards.map(([title, copy]) => (
-            <Card key={title} className="outline-tile p-5">
-              <div className="mb-4 h-1 w-12 bg-gold" />
-              <h2 className="font-serif text-2xl font-semibold text-pine">{title}</h2>
-              <p className="mt-2 text-sm leading-6 text-charcoal/70">{copy}</p>
-            </Card>
+        <div className="mt-5 grid gap-4 sm:grid-cols-2">
+          {["Address", "Price", "Bedrooms", "Bathrooms", "Square footage", "Template"].map((field) => (
+            <label key={field} className="text-sm font-semibold text-pine">
+              {field}
+              <input className="mt-2 h-11 w-full rounded-md border border-pine/25 bg-cream px-3 text-sm shadow-inner outline-none focus:border-gold focus:bg-white" placeholder={field} />
+            </label>
           ))}
         </div>
-      </section>
 
-      <section id="services" className="section-frame py-20">
-        <div className="mx-auto max-w-7xl px-5">
-          <SectionHeading eyebrow="Services" title="Estate media services for polished listing launches" copy="A full creative workflow for property video, listing copy, agent branding, and social-ready marketing materials." />
-          <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {services.map(([title, copy, Icon]) => (
-              <Card key={title} className="outline-tile p-5 transition hover:-translate-y-1 hover:border-gold/70">
-                <div className="flex h-11 w-11 items-center justify-center rounded-md border border-gold/40 bg-white"><Icon size={22} className="text-gold" /></div>
-                <h3 className="mt-4 font-serif text-2xl font-semibold text-pine">{title}</h3>
-                <p className="mt-2 text-sm leading-6 text-charcoal/70">{copy}</p>
-              </Card>
-            ))}
+        <label className="mt-5 block text-sm font-semibold text-pine">
+          Listing description
+          <textarea
+            className="mt-2 min-h-36 w-full resize-y rounded-md border border-pine/25 bg-cream px-3 py-3 text-sm leading-6 shadow-inner outline-none focus:border-gold focus:bg-white"
+            value={description}
+            onChange={(event) => {
+              setDescription(event.target.value);
+              setStatus("idle");
+            }}
+            placeholder="Paste existing notes, seller highlights, MLS draft copy, or property remarks."
+          />
+        </label>
+
+        <Button className="mt-5 w-full" onClick={markReady} disabled={!items.length && !description.trim()}>
+          <UploadCloud size={16} /> Upload package
+        </Button>
+        </div>
+      </Card>
+
+      <Card className="corner-frame overflow-hidden">
+        <div className="flex items-center justify-between gap-4 border-b border-pine/10 bg-white px-6 py-5">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-gold">Campaign sourceboard</p>
+            <h2 className="mt-1 font-serif text-3xl font-semibold text-pine">Uploaded assets</h2>
           </div>
+          <Palette className="text-gold" size={24} />
         </div>
-      </section>
+        <div className="p-6">
+        {!items.length && !description.trim() ? (
+          <div className="rounded-lg border border-pine/20 bg-cream p-8 shadow-inner">
+            <div className="grid gap-4 md:grid-cols-[0.8fr_1.2fr] md:items-center">
+              <div className="aspect-[4/3] rounded-lg border border-pine/20 bg-[linear-gradient(135deg,#0F2C25,#F7F3EA_62%,#C8A45D)] shadow-inner" />
+              <div>
+                <UploadCloud className="text-gold" size={34} />
+                <p className="mt-3 font-semibold text-pine">No assets uploaded yet</p>
+                <p className="mt-2 text-sm leading-6 text-charcoal/65">Add property photos and description notes to populate the preview board.</p>
+                <div className="mt-4 grid gap-2">
+                  {["Photo gallery", "Description draft", "Brand assets"].map((item) => (
+                    <div key={item} className="flex items-center gap-2 text-sm text-charcoal/70">
+                      <BadgeCheck size={15} className="text-gold" />
+                      {item}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : null}
 
-      <section id="portfolio" className="mx-auto max-w-7xl px-5 py-20">
-        <SectionHeading eyebrow="Portfolio" title="A showcase built like a luxury listing presentation" copy="Use the portfolio area for featured property media, before-and-after edits, and video preview cards." />
-        <div className="mt-12 grid gap-5 md:grid-cols-3">
-          <ShowcaseCard title="Coastal estate media package" label="Featured property" tall />
-          <ShowcaseCard title="Before and after gallery" label="Image polish" />
-          <ShowcaseCard title="Vertical reel preview" label="Social video" />
-          <ShowcaseCard title="Editorial listing story" label="Presentation asset" />
-          <ShowcaseCard title="Agent brand overlay" label="Brand system" />
-        </div>
-      </section>
-
-      <section id="process" className="bg-forest py-20 text-offWhite">
-        <div className="mx-auto max-w-7xl px-5">
-          <SectionHeading eyebrow="Process" title="A calm studio flow for every listing" copy="Upload, describe, brand, generate, edit, and export from a single focused workspace." className="[&_*]:text-offWhite [&_p:first-child]:!text-gold" />
-          <div className="mt-12 grid gap-5 md:grid-cols-4">
-            {process.map(([title, copy], index) => (
-              <div key={title} className="rounded-lg border border-white/15 bg-white/5 p-5 shadow-sm">
-                <p className="font-serif text-5xl font-semibold text-gold">{index + 1}</p>
-                <h3 className="mt-4 font-serif text-2xl font-semibold">{title}</h3>
-                <p className="mt-3 text-sm leading-6 text-offWhite/70">{copy}</p>
+        {items.length ? (
+          <div className={compact ? "mt-6 grid gap-3" : "mt-6 grid gap-4 sm:grid-cols-2"}>
+            {items.map((item) => (
+              <div key={item.id} className="relative overflow-hidden rounded-lg border border-pine/20 bg-cream shadow-sm">
+                {item.previewUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={item.previewUrl} alt={item.file.name} className="h-44 w-full object-cover" />
+                ) : (
+                  <div className="flex h-44 items-center justify-center bg-white">
+                    {item.kind === "audio" ? <FileAudio className="text-gold" size={34} /> : item.kind === "video" ? <Video className="text-gold" size={34} /> : <FileText className="text-gold" size={34} />}
+                  </div>
+                )}
+                <button className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-md bg-white text-pine shadow-sm" onClick={() => removeItem(item.id)} aria-label={`Remove ${item.file.name}`}>
+                  <X size={16} />
+                </button>
+                <div className="p-4">
+                  <p className="truncate text-sm font-semibold text-pine">{item.file.name}</p>
+                  <p className="mt-1 text-xs uppercase tracking-[0.14em] text-charcoal/50">{item.kind} - {formatSize(item.file.size)}</p>
+                </div>
               </div>
             ))}
           </div>
-        </div>
-      </section>
+        ) : null}
 
-      <section className="section-frame py-20">
-        <div className="mx-auto grid max-w-7xl gap-8 px-5 lg:grid-cols-[0.82fr_1.18fr] lg:items-center">
-          <div className="border-l border-gold pl-6">
-            <p className="text-xs font-bold uppercase tracking-[0.24em] text-gold">Brand Center</p>
-            <h2 className="mt-4 font-serif text-4xl font-semibold leading-tight text-pine md:text-5xl">Save the details that make every asset feel unmistakably yours.</h2>
-            <p className="mt-5 text-base leading-8 text-charcoal/70">A polished dashboard preview for brand identity, brokerage information, contact details, and reusable style controls.</p>
-          </div>
-          <Card className="corner-frame p-6">
-            <div className="grid gap-4 sm:grid-cols-2">
-              {brandPreview.map((item) => (
-                <div key={item} className="outline-tile rounded-md p-4">
-                  <BadgeCheck size={18} className="text-gold" />
-                  <p className="mt-3 font-semibold text-pine">{item}</p>
-                  <div className="mt-3 h-2 rounded-full bg-tan/60" />
-                </div>
-              ))}
+        {description.trim() ? (
+          <div className="mt-6 rounded-lg border border-pine/20 bg-white p-5 shadow-sm">
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-gold">Description draft</p>
+            <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-charcoal/75">{description}</p>
+            <div className="mt-4 flex items-center gap-2 border-t border-pine/10 pt-4 text-xs font-semibold uppercase tracking-[0.14em] text-pine">
+              <Sparkles size={15} className="text-gold" />
+              Ready for AI copy generation
             </div>
-          </Card>
-        </div>
-      </section>
-
-      <section id="features" className="mx-auto max-w-7xl px-5 py-20">
-        <SectionHeading eyebrow="Features" title="Built for listing media operations" copy="Everything needed to keep listing assets, AI drafts, brand controls, and media exports organized." />
-        <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-          {features.map(([title, copy, Icon]) => (
-            <Card key={title} className="p-5">
-              <Icon size={22} className="text-gold" />
-              <h3 className="mt-4 font-semibold text-pine">{title}</h3>
-              <p className="mt-2 text-sm leading-6 text-charcoal/65">{copy}</p>
-            </Card>
-          ))}
-        </div>
-      </section>
-
-      <section id="testimonials" className="section-frame py-20">
-        <div className="mx-auto max-w-7xl px-5">
-          <SectionHeading eyebrow="Testimonials" title="Presentation-quality work agents can feel confident sharing" />
-          <div className="mt-12 grid gap-5 md:grid-cols-3">
-            {testimonials.map(([quote, name, role]) => (
-              <Card key={name} className="border-l-4 border-l-gold p-6">
-                <p className="font-serif text-2xl leading-8 text-pine">"{quote}"</p>
-                <p className="mt-6 text-sm font-bold uppercase tracking-[0.16em] text-gold">{name}</p>
-                <p className="mt-1 text-sm text-charcoal/60">{role}</p>
-              </Card>
-            ))}
           </div>
+        ) : null}
         </div>
-      </section>
-
-      <section id="faq" className="mx-auto max-w-4xl px-5 py-20">
-        <SectionHeading eyebrow="FAQ" title="Straight answers before the first listing" />
-        <div className="mt-10 divide-y divide-pine/15 rounded-lg border border-pine/20 bg-white px-5 shadow-sm">
-          {faqs.map(([q, a]) => (
-            <details key={q} className="group py-5">
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold text-pine">
-                {q}
-                <ChevronDown size={18} className="text-gold transition group-open:rotate-180" />
-              </summary>
-              <p className="mt-3 text-sm leading-6 text-charcoal/70">{a}</p>
-            </details>
-          ))}
-        </div>
-      </section>
-
-      <section id="contact" className="bg-pine px-5 py-20 text-center text-offWhite">
-        <div className="mx-auto max-w-4xl">
-          <p className="text-xs font-bold uppercase tracking-[0.24em] text-gold">Start the studio</p>
-          <h2 className="mx-auto mt-4 font-serif text-4xl font-semibold md:text-6xl">Bring a More Refined Standard to Your Listing Media</h2>
-          <div className="gold-rule mx-auto my-7 max-w-md" />
-          <p className="mx-auto max-w-2xl text-base leading-8 text-offWhite/75">Create polished property videos, branded assets, and social-ready content from one streamlined studio.</p>
-          <Link href="/dashboard/studio" className={buttonClassName("gold", "mt-8")}>{brand.ctas.final} <ArrowRight size={16} /></Link>
-        </div>
-      </section>
-
-      <footer className="bg-forest px-5 py-12 text-offWhite">
-        <div className="mx-auto grid max-w-7xl gap-8 md:grid-cols-[1.2fr_0.8fr_0.8fr_0.8fr]">
-          <div>
-            <p className="font-serif text-3xl font-semibold">{brand.name}</p>
-            <p className="mt-4 max-w-md text-sm leading-6 text-offWhite/65">{brand.description}</p>
-          </div>
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-gold">Services</p>
-            <div className="mt-4 space-y-2 text-sm text-offWhite/70"><p>Property videos</p><p>Social assets</p><p>Brand kits</p></div>
-          </div>
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-gold">Company</p>
-            <div className="mt-4 space-y-2 text-sm text-offWhite/70"><p>Portfolio</p><p>Process</p><p>FAQ</p></div>
-          </div>
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-gold">Contact</p>
-            <div className="mt-4 space-y-2 text-sm text-offWhite/70"><p>{brand.contact.email}</p><p>{brand.contact.phone}</p><p>Instagram / LinkedIn</p></div>
-          </div>
-        </div>
-      </footer>
-    </main>
+      </Card>
+    </div>
   );
 }

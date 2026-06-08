@@ -1,21 +1,26 @@
+import * as React from "react";
 import { cn } from "@/lib/utils";
 
-export function SectionHeading({
-  eyebrow,
-  title,
-  copy,
-  className
-}: {
-  eyebrow?: string;
-  title: string;
-  copy?: string;
-  className?: string;
-}) {
+type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
+  variant?: "primary" | "secondary" | "ghost" | "gold";
+};
+
+export function buttonClassName(variant: ButtonProps["variant"] = "primary", className?: string) {
+  return cn(
+    "inline-flex h-11 items-center justify-center gap-2 rounded-md px-5 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+    variant === "primary" && "bg-pine text-white hover:bg-forest",
+    variant === "secondary" && "border border-pine/20 bg-white text-pine hover:bg-offWhite",
+    variant === "ghost" && "text-pine hover:bg-white/60",
+    variant === "gold" && "bg-gold text-forest hover:bg-[#d4b36f]",
+    className
+  );
+}
+
+export function Button({ className, variant = "primary", ...props }: ButtonProps) {
   return (
-    <div className={cn("mx-auto max-w-3xl text-center", className)}>
-      {eyebrow ? <p className="mb-3 text-xs font-bold uppercase tracking-[0.24em] text-gold">{eyebrow}</p> : null}
-      <h2 className="font-serif text-4xl font-semibold leading-tight text-pine md:text-5xl">{title}</h2>
-      {copy ? <p className="mt-5 text-base leading-8 text-charcoal/75 md:text-lg">{copy}</p> : null}
-    </div>
+    <button
+      className={buttonClassName(variant, className)}
+      {...props}
+    />
   );
 }

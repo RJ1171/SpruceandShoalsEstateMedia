@@ -1,59 +1,52 @@
-import { Music, Rows3, Sparkles, UploadCloud, Video, type LucideIcon } from "lucide-react";
-import { DashboardShell } from "@/components/dashboard-shell";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { UploadWorkspace } from "@/components/upload-workspace";
+import Link from "next/link";
+import { BarChart3, FolderKanban, Images, LayoutDashboard, Palette, Shield, Video } from "lucide-react";
+import { brand } from "@/config/brand";
+import { cn } from "@/lib/utils";
 
-const workflow: Array<[string, LucideIcon]> = [
-  ["Upload property photos", UploadCloud],
-  ["Enter property details", Rows3],
-  ["Choose template", Video],
-  ["Select voice, music, branding", Music],
-  ["Generate video", Sparkles],
-  ["Preview, edit, export", Video]
-];
+const nav = [
+  ["Dashboard", "/dashboard", LayoutDashboard],
+  ["Projects", "/dashboard/projects", FolderKanban],
+  ["Media", "/dashboard/media", Images],
+  ["Brand", "/dashboard/brand", Palette],
+  ["Studio", "/dashboard/studio", Video],
+  ["Admin", "/admin", Shield]
+] as const;
 
-export default function StudioPage() {
+export function DashboardShell({ children, title, subtitle }: { children: React.ReactNode; title: string; subtitle?: string }) {
   return (
-    <DashboardShell title="Video Studio" subtitle="A guided workflow for upload, property details, templates, voice, music, branding, AI generation, preview, timeline editing, and export.">
-      <UploadWorkspace />
-      <div className="mt-6 grid gap-6 lg:grid-cols-[0.72fr_1.28fr]">
-        <Card className="p-6">
-          <h2 className="font-serif text-3xl font-semibold text-pine">Create video</h2>
-          <div className="mt-5 space-y-3">
-            {workflow.map(([label, Icon], index) => (
-              <div key={label} className="flex items-center gap-3 rounded-md border border-pine/10 p-3">
-                <span className="flex h-8 w-8 items-center justify-center rounded-md bg-pine text-xs font-bold text-gold">{index + 1}</span>
-                <Icon size={18} className="text-gold" />
-                <span className="text-sm font-semibold text-pine">{label}</span>
-              </div>
-            ))}
+    <div className="min-h-screen bg-cream">
+      <aside className="fixed inset-y-0 left-0 hidden w-72 border-r border-gold/25 bg-forest px-5 py-6 text-offWhite shadow-[12px_0_45px_rgba(15,44,37,0.18)] lg:block">
+        <Link href="/" className="flex items-center gap-3">
+          <span className="flex h-11 w-11 items-center justify-center rounded-md border border-gold/50 bg-pine font-serif text-xl font-semibold text-gold shadow-sm">S</span>
+          <span>
+            <span className="block font-serif text-xl font-semibold leading-5">{brand.shortName}</span>
+            <span className="block text-[11px] uppercase tracking-[0.22em] text-offWhite/60">Command Studio</span>
+          </span>
+        </Link>
+        <div className="editorial-rule mt-6" />
+        <nav className="mt-10 space-y-2">
+          {nav.map(([label, href, Icon]) => (
+            <Link key={href} href={href} className={cn("flex items-center gap-3 rounded-md border border-transparent px-3 py-2.5 text-sm font-semibold text-offWhite/70 hover:border-gold/40 hover:bg-pine hover:text-gold")}>
+              <Icon size={18} className="text-gold" />
+              {label}
+            </Link>
+          ))}
+        </nav>
+        <div className="absolute bottom-6 left-5 right-5 rounded-lg border border-gold/30 bg-pine/70 p-4">
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-gold">Brand system</p>
+          <p className="mt-2 text-sm leading-6 text-offWhite/65">All visible identity is controlled in the brand config.</p>
+        </div>
+      </aside>
+      <div className="lg:pl-72">
+        <header className="border-b border-pine/20 bg-cream/95 px-5 py-6 shadow-[0_12px_35px_rgba(15,44,37,0.05)] backdrop-blur">
+          <div className="mx-auto max-w-7xl border-l border-gold pl-5">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-gold">Luxury real estate media platform</p>
+            <h1 className="mt-2 font-serif text-4xl font-semibold text-pine">{title}</h1>
+            {subtitle ? <p className="mt-2 max-w-3xl text-sm leading-6 text-charcoal/70">{subtitle}</p> : null}
           </div>
-          <Button className="mt-6 w-full">Generate video</Button>
-        </Card>
-        <Card className="overflow-hidden">
-          <div className="bg-pine p-6 text-white">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-gold">Preview canvas</p>
-            <div className="mt-4 aspect-video rounded-lg border border-white/10 bg-[linear-gradient(135deg,#0F2C25,#F7F3EA_68%,#C8A45D)] shadow-luxury" />
-          </div>
-          <div className="mt-5">
-            <div className="px-6">
-              <h2 className="font-serif text-3xl font-semibold text-pine">Timeline editor</h2>
-              <p className="mt-2 text-sm leading-6 text-charcoal/65">Scene cards will populate from uploaded listing photos and generated copy.</p>
-            </div>
-            <div className="mt-4 grid grid-cols-6 gap-2 px-6">
-              {Array.from({ length: 12 }).map((_, index) => (
-                <div key={index} className="h-16 rounded-md border border-pine/10 bg-cream shadow-inner" />
-              ))}
-            </div>
-            <div className="mt-5 grid gap-3 px-6 pb-6 md:grid-cols-3">
-              {["Scene ordering", "Text overlays", "Logo overlays", "Voiceover", "Music", "Intros and outros", "Vertical", "Horizontal", "Square"].map((tool) => (
-                <span key={tool} className="rounded-md border border-pine/10 px-3 py-2 text-sm font-medium text-charcoal/70">{tool}</span>
-              ))}
-            </div>
-          </div>
-        </Card>
+        </header>
+        <main className="mx-auto max-w-7xl px-5 py-8">{children}</main>
       </div>
-    </DashboardShell>
+    </div>
   );
 }

@@ -1,26 +1,49 @@
-import * as React from "react";
-import { cn } from "@/lib/utils";
-
-type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: "primary" | "secondary" | "ghost" | "gold";
-};
-
-export function buttonClassName(variant: ButtonProps["variant"] = "primary", className?: string) {
-  return cn(
-    "inline-flex h-11 items-center justify-center gap-2 rounded-md px-5 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
-    variant === "primary" && "bg-pine text-white hover:bg-forest",
-    variant === "secondary" && "border border-pine/20 bg-white text-pine hover:bg-offWhite",
-    variant === "ghost" && "text-pine hover:bg-white/60",
-    variant === "gold" && "bg-gold text-forest hover:bg-[#d4b36f]",
-    className
-  );
-}
-
-export function Button({ className, variant = "primary", ...props }: ButtonProps) {
-  return (
-    <button
-      className={buttonClassName(variant, className)}
-      {...props}
-    />
-  );
-}
+export const brand = {
+  name: "Spruce & Shoals Estate Media",
+  shortName: "Spruce & Shoals",
+  tagline: "Refined real estate media for coastal New England listings",
+  description:
+    "A polished estate media studio for listing videos, social content, editorial descriptions, and branded real estate marketing assets.",
+  domain: "https://spruceandshoals.example",
+  contact: {
+    email: "studio@spruceandshoals.example",
+    phone: "(978) 555-0148",
+    region: "North Shore, Boston, Cape Ann, and coastal New England"
+  },
+  colors: {
+    pine: "#173F35",
+    forest: "#0F2C25",
+    gold: "#C6A15B",
+    mutedGold: "#A8843F",
+    tan: "#D8C7A3",
+    cream: "#FBF8F1",
+    offWhite: "#F7F3EA",
+    charcoal: "#1F2933",
+    muted: "#6B7280",
+    linen: "#D8C7A3",
+    white: "#FFFFFF"
+  },
+  typography: {
+    display: "Cormorant Garamond",
+    body: "Inter"
+  },
+  navigation: [
+    { label: "Services", href: "#services" },
+    { label: "Portfolio", href: "#portfolio" },
+    { label: "Process", href: "#process" },
+    { label: "Testimonials", href: "#testimonials" },
+    { label: "FAQ", href: "#faq" },
+    { label: "Contact", href: "#contact" }
+  ],
+  ctas: {
+    primary: "Start a Project",
+    heroPrimary: "Create Listing Media",
+    heroSecondary: "View Showcase",
+    final: "Start Building"
+  },
+  defaultBrandProfile: {
+    brokerageName: "Editable Brokerage",
+    agentName: "Editable Lead Advisor",
+    disclosure: "Equal Housing Opportunity. All property information is subject to verification."
+  }
+} as const;
