@@ -1,26 +1,22 @@
-NEXT_PUBLIC_APP_URL=
+export type UserRole = "OWNER" | "ADMIN" | "MEMBER" | "VIEWER";
 
-DATABASE_URL=
+export type AssetType = "PHOTO" | "VIDEO" | "AUDIO" | "LOGO" | "HEADSHOT" | "BRAND_ASSET";
 
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
-CLERK_SECRET_KEY=
+export type VideoFormat = "VERTICAL" | "HORIZONTAL" | "SQUARE";
 
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
+export type ProjectStatus = "DRAFT" | "UPLOADING" | "GENERATING" | "READY" | "EXPORTED" | "ARCHIVED";
 
-OPENAI_API_KEY=
+export type PropertyDetails = {
+  address: string;
+  price?: number;
+  bedrooms?: number;
+  bathrooms?: number;
+  squareFeet?: number;
+  description?: string;
+};
 
-CLOUDINARY_CLOUD_NAME=
-CLOUDINARY_API_KEY=
-CLOUDINARY_API_SECRET=
-
-MUX_TOKEN_ID=
-MUX_TOKEN_SECRET=
-
-RESEND_API_KEY=
-
-POSTHOG_KEY=
-NEXT_PUBLIC_POSTHOG_KEY=
-NEXT_PUBLIC_GA_MEASUREMENT_ID=
-
-SENTRY_DSN=
+export type AiGenerationRequest = {
+  property: PropertyDetails;
+  tone: "MLS" | "LUXURY" | "SOCIAL" | "OPEN_HOUSE";
+  brandProfileId?: string;
+};

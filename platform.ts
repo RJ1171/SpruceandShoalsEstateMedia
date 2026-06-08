@@ -1,13 +1,27 @@
-# Supabase Setup Guide
+import { z } from "zod";
 
-1. Create a Supabase project in the closest region to your primary users.
-2. Copy `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` into `.env.local`.
-3. Create storage buckets for:
-   - `photos`
-   - `videos`
-   - `audio`
-   - `logos`
-   - `headshots`
-   - `brand-assets`
-4. Use row-level security policies that scope records to organization membership.
-5. Keep large generated video delivery on Mux or Cloudinary unless Supabase storage is explicitly preferred.
+export const videoGenerationSchema = z.object({
+  projectId: z.string(),
+  templateId: z.string(),
+  format: z.enum(["VERTICAL", "HORIZONTAL", "SQUARE"]),
+  voiceId: z.string().optional(),
+  musicId: z.string().optional(),
+  brandProfileId: z.string()
+});
+
+export type VideoGenerationJob = z.infer<typeof videoGenerationSchema>;
+
+export async function enqueueVideoGeneration(job: VideoGenerationJob) {
+  // Production path: persist a job row, invoke FFmpeg workers, upload mezzanine output to Mux, and emit lifecycle webhooks.
+  return {
+    id: `job_${job.projectId}_${Date.now()}`,
+    status: "QUEUED",
+    providers: ["ffmpeg", "mux", "openai", "replicate"]
+  };
+}
+
+export const futureVideoProviders = {
+  replicate: ["image-enhancement", "virtual-staging"],
+  runway: ["text-to-video", "motion-brush"],
+  stability: ["sky-replacement", "image-upscale"]
+};

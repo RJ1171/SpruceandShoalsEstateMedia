@@ -1,34 +1,21 @@
-"use client";
+import { Body, Container, Head, Hr, Html, Preview, Section, Text } from "@react-email/components";
+import { brand } from "@/config/brand";
 
-import Script from "next/script";
-import posthog from "posthog-js";
-import { useEffect } from "react";
-
-export function Analytics() {
-  useEffect(() => {
-    const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
-
-    if (key && typeof window !== "undefined") {
-      posthog.init(key, {
-        api_host: "https://app.posthog.com",
-        capture_pageview: true
-      });
-    }
-  }, []);
-
-  const gaId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
-
-  return gaId ? (
-    <>
-      <Script src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`} strategy="afterInteractive" />
-      <Script id="google-analytics" strategy="afterInteractive">
-        {`
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-          gtag('config', '${gaId}');
-        `}
-      </Script>
-    </>
-  ) : null;
+export function EmailFrame({ preview, children }: { preview: string; children: React.ReactNode }) {
+  return (
+    <Html>
+      <Head />
+      <Preview>{preview}</Preview>
+      <Body style={{ backgroundColor: brand.colors.cream, color: brand.colors.charcoal, fontFamily: "Arial, sans-serif" }}>
+        <Container style={{ margin: "0 auto", padding: "32px 20px", maxWidth: "620px" }}>
+          <Section style={{ backgroundColor: brand.colors.white, border: `1px solid ${brand.colors.linen}`, padding: "32px" }}>
+            <Text style={{ color: brand.colors.gold, fontSize: "12px", letterSpacing: "2px", textTransform: "uppercase" }}>{brand.name}</Text>
+            {children}
+            <Hr style={{ borderColor: brand.colors.linen, margin: "28px 0" }} />
+            <Text style={{ color: "#69707a", fontSize: "12px" }}>{brand.contact.email}</Text>
+          </Section>
+        </Container>
+      </Body>
+    </Html>
+  );
 }

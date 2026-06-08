@@ -1,9 +1,13 @@
-import { Resend } from "resend";
+import { PrismaClient } from "@prisma/client";
 
-export function getResendClient() {
-  if (!process.env.RESEND_API_KEY) {
-    throw new Error("RESEND_API_KEY is not configured.");
-  }
+const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
-  return new Resend(process.env.RESEND_API_KEY);
+export const prisma =
+  globalForPrisma.prisma ??
+  new PrismaClient({
+    log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"]
+  });
+
+if (process.env.NODE_ENV !== "production") {
+  globalForPrisma.prisma = prisma;
 }
