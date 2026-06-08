@@ -1,17 +1,26 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+NEXT_PUBLIC_APP_URL=
 
-const isProtectedRoute = createRouteMatcher(["/dashboard(.*)", "/admin(.*)", "/api/video(.*)"]);
+DATABASE_URL=
 
-export default clerkMiddleware(async (auth, req) => {
-  if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || !process.env.CLERK_SECRET_KEY) {
-    return;
-  }
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
+CLERK_SECRET_KEY=
 
-  if (isProtectedRoute(req)) {
-    await auth.protect();
-  }
-});
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
 
-export const config = {
-  matcher: ["/((?!_next|.*\\..*).*)"]
-};
+OPENAI_API_KEY=
+
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
+
+MUX_TOKEN_ID=
+MUX_TOKEN_SECRET=
+
+RESEND_API_KEY=
+
+POSTHOG_KEY=
+NEXT_PUBLIC_POSTHOG_KEY=
+NEXT_PUBLIC_GA_MEASUREMENT_ID=
+
+SENTRY_DSN=

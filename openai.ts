@@ -1,13 +1,14 @@
-import { PrismaClient } from "@prisma/client";
+import * as React from "react";
+import { cn } from "@/lib/utils";
 
-const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
-
-export const prisma =
-  globalForPrisma.prisma ??
-  new PrismaClient({
-    log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"]
-  });
-
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prisma;
+export function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div
+      className={cn(
+        "rounded-lg border border-pine/20 bg-white shadow-[0_18px_45px_rgba(15,44,37,0.08)] ring-1 ring-white/70",
+        className
+      )}
+      {...props}
+    />
+  );
 }

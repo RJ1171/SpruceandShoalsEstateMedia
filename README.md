@@ -1,17 +1,6 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+/// <reference types="next" />
+/// <reference types="next/image-types/global" />
+/// <reference path="./.next/types/routes.d.ts" />
 
-const isProtectedRoute = createRouteMatcher(["/dashboard(.*)", "/admin(.*)", "/api/video(.*)"]);
-
-export default clerkMiddleware(async (auth, req) => {
-  if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || !process.env.CLERK_SECRET_KEY) {
-    return;
-  }
-
-  if (isProtectedRoute(req)) {
-    await auth.protect();
-  }
-});
-
-export const config = {
-  matcher: ["/((?!_next|.*\\..*).*)"]
-};
+// NOTE: This file should not be edited
+// see https://nextjs.org/docs/app/api-reference/config/typescript for more information.

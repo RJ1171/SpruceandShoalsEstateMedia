@@ -1,5 +1,17 @@
-export async function register() {
-  if (process.env.NEXT_RUNTIME === "nodejs" && process.env.SENTRY_DSN) {
-    await import("./sentry.server.config");
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "res.cloudinary.com" },
+      { protocol: "https", hostname: "image.mux.com" }
+    ]
+  },
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "25mb"
+    }
   }
-}
+};
+
+export default nextConfig;

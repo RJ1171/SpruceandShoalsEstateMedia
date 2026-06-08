@@ -1,91 +1,37 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+import type { Metadata } from "next";
+import { ClerkProvider } from "@clerk/nextjs";
+import { brand } from "@/config/brand";
+import { Analytics } from "@/components/analytics";
+import "./globals.css";
 
-:root {
-  color-scheme: light;
-  --font-display: "Cormorant Garamond";
-  --font-sans: "Inter";
-  --background: #fbf8f1;
-  --foreground: #1f2933;
-}
+export const metadata: Metadata = {
+  title: `${brand.name} | AI Real Estate Media Platform`,
+  description: brand.description,
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
+  openGraph: {
+    title: brand.name,
+    description: brand.description,
+    type: "website"
+  }
+};
 
-* {
-  box-sizing: border-box;
-}
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const content = (
+    <html lang="en">
+      <body>
+        {children}
+        <Analytics />
+      </body>
+    </html>
+  );
 
-html {
-  scroll-behavior: smooth;
-}
+  if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
+    return content;
+  }
 
-body {
-  margin: 0;
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans), Arial, sans-serif;
-}
-
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-button,
-input,
-textarea,
-select {
-  font: inherit;
-}
-
-.gold-rule {
-  background: linear-gradient(90deg, transparent, #c8a45d, transparent);
-  height: 1px;
-}
-
-.section-frame {
-  border-top: 1px solid rgba(23, 63, 53, 0.18);
-  border-bottom: 1px solid rgba(23, 63, 53, 0.18);
-  background:
-    linear-gradient(90deg, rgba(198, 161, 91, 0.12) 0, transparent 22%, transparent 78%, rgba(23, 63, 53, 0.08) 100%),
-    #f7f3ea;
-}
-
-.corner-frame {
-  position: relative;
-}
-
-.corner-frame::before,
-.corner-frame::after {
-  content: "";
-  position: absolute;
-  pointer-events: none;
-  width: 74px;
-  height: 74px;
-  border-color: #c6a15b;
-}
-
-.corner-frame::before {
-  left: 14px;
-  top: 14px;
-  border-left: 1px solid;
-  border-top: 1px solid;
-}
-
-.corner-frame::after {
-  right: 14px;
-  bottom: 14px;
-  border-right: 1px solid;
-  border-bottom: 1px solid;
-}
-
-.editorial-rule {
-  height: 1px;
-  background: linear-gradient(90deg, #c6a15b, rgba(23, 63, 53, 0.24), transparent);
-}
-
-.outline-tile {
-  border: 1px solid rgba(23, 63, 53, 0.18);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(247, 243, 234, 0.8));
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.72);
+  return (
+    <ClerkProvider>
+      {content}
+    </ClerkProvider>
+  );
 }

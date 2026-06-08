@@ -1,33 +1,37 @@
-# Estate Reel Studio
+import type { Config } from "tailwindcss";
 
-A production-oriented AI real estate media platform scaffold for luxury listing teams. It includes an original New England-inspired brand system, polished landing page, authenticated dashboard, project workflow, media library, brand center, video studio, admin panel, Prisma schema, AI routes, video generation architecture, email templates, analytics hooks, and deployment documentation.
+const config: Config = {
+  content: [
+    "./app/**/*.{ts,tsx}",
+    "./components/**/*.{ts,tsx}",
+    "./emails/**/*.{ts,tsx}",
+    "./config/**/*.{ts,tsx}"
+  ],
+  theme: {
+    extend: {
+      colors: {
+        pine: "#173F35",
+        forest: "#0F2C25",
+        gold: "#C6A15B",
+        mutedGold: "#A8843F",
+        tan: "#D8C7A3",
+        cream: "#FBF8F1",
+        offWhite: "#F7F3EA",
+        navy: "#173F35",
+        charcoal: "#1F2933",
+        muted: "#6B7280",
+        linen: "#D8C7A3"
+      },
+      fontFamily: {
+        serif: ["var(--font-display)", "Georgia", "serif"],
+        sans: ["var(--font-sans)", "Inter", "Arial", "sans-serif"]
+      },
+      boxShadow: {
+        luxury: "0 22px 70px rgba(23, 35, 59, 0.14)"
+      }
+    }
+  },
+  plugins: []
+};
 
-## Brand
-
-All editable brand defaults live in `config/brand.ts`.
-
-## Core Directories
-
-- `app`: Next.js routes, dashboard, admin, and API handlers
-- `components`: shared UI and product components
-- `lib`: service clients and orchestration helpers
-- `hooks`: reusable client hooks
-- `actions`: server actions
-- `types`: platform types
-- `emails`: React Email templates
-- `public`: static assets
-- `prisma`: database schema
-- `config`: brand and product configuration
-- `docs`: deployment and setup guides
-
-## Quick Start
-
-```bash
-npm install
-cp .env.example .env.local
-npm run prisma:generate
-npm run prisma:migrate
-npm run dev
-```
-
-See `docs/local-setup.md` and `docs/production-deployment.md` for full setup.
+export default config;
