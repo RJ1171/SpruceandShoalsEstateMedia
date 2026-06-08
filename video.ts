@@ -1,9 +1,12 @@
-import OpenAI from "openai";
+import { createClient } from "@supabase/supabase-js";
 
-export function getOpenAIClient() {
-  if (!process.env.OPENAI_API_KEY) {
-    throw new Error("OPENAI_API_KEY is not configured.");
+export function getSupabaseClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!url || !anonKey) {
+    throw new Error("Supabase environment variables are not configured.");
   }
 
-  return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  return createClient(url, anonKey);
 }

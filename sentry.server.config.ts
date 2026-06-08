@@ -1,17 +1,17 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import type { NextConfig } from "next";
 
-const isProtectedRoute = createRouteMatcher(["/dashboard(.*)", "/admin(.*)", "/api/video(.*)"]);
-
-export default clerkMiddleware(async (auth, req) => {
-  if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || !process.env.CLERK_SECRET_KEY) {
-    return;
+const nextConfig: NextConfig = {
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "res.cloudinary.com" },
+      { protocol: "https", hostname: "image.mux.com" }
+    ]
+  },
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "25mb"
+    }
   }
-
-  if (isProtectedRoute(req)) {
-    await auth.protect();
-  }
-});
-
-export const config = {
-  matcher: ["/((?!_next|.*\\..*).*)"]
 };
+
+export default nextConfig;

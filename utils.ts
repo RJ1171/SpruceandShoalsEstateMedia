@@ -1,9 +1,9 @@
-import { Resend } from "resend";
+import OpenAI from "openai";
 
-export function getResendClient() {
-  if (!process.env.RESEND_API_KEY) {
-    throw new Error("RESEND_API_KEY is not configured.");
+export function getOpenAIClient() {
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error("OPENAI_API_KEY is not configured.");
   }
 
-  return new Resend(process.env.RESEND_API_KEY);
+  return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 }

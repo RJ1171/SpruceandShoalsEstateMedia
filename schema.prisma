@@ -1,12 +1,10 @@
-import { createClient } from "@supabase/supabase-js";
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
 
-export function getSupabaseClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
 
-  if (!url || !anonKey) {
-    throw new Error("Supabase environment variables are not configured.");
-  }
-
-  return createClient(url, anonKey);
+export function formatNumber(value: number) {
+  return new Intl.NumberFormat("en-US").format(value);
 }
