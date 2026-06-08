@@ -1,31 +1,27 @@
-# Local Setup Guide
+import { z } from "zod";
 
-## Requirements
+export const videoGenerationSchema = z.object({
+  projectId: z.string(),
+  templateId: z.string(),
+  format: z.enum(["VERTICAL", "HORIZONTAL", "SQUARE"]),
+  voiceId: z.string().optional(),
+  musicId: z.string().optional(),
+  brandProfileId: z.string()
+});
 
-- Node.js 20+
-- PostgreSQL database
-- Clerk application
-- Supabase project
-- Cloudinary account
-- OpenAI API key
-- Resend account
-- Mux account
+export type VideoGenerationJob = z.infer<typeof videoGenerationSchema>;
 
-## Install
+export async function enqueueVideoGeneration(job: VideoGenerationJob) {
+  // Production path: persist a job row, invoke FFmpeg workers, upload mezzanine output to Mux, and emit lifecycle webhooks.
+  return {
+    id: `job_${job.projectId}_${Date.now()}`,
+    status: "QUEUED",
+    providers: ["ffmpeg", "mux", "openai", "replicate"]
+  };
+}
 
-```bash
-npm install
-cp .env.example .env.local
-npm run prisma:generate
-npm run prisma:migrate
-npm run dev
-```
-
-Open `http://localhost:3000`.
-
-## Notes
-
-- All editable brand defaults live in `config/brand.ts`.
-- The dashboard and video generation routes are protected by Clerk middleware.
-- The AI routes fail fast when `OPENAI_API_KEY` is missing.
-- The video generation endpoint currently enqueues a provider-neutral job object. Connect it to a queue such as Inngest, Trigger.dev, or a dedicated worker when enabling long-running FFmpeg jobs.
+export const futureVideoProviders = {
+  replicate: ["image-enhancement", "virtual-staging"],
+  runway: ["text-to-video", "motion-brush"],
+  stability: ["sky-replacement", "image-upscale"]
+};

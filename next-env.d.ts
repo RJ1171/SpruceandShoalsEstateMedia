@@ -1,17 +1,26 @@
-import type { NextConfig } from "next";
+NEXT_PUBLIC_APP_URL=
 
-const nextConfig: NextConfig = {
-  images: {
-    remotePatterns: [
-      { protocol: "https", hostname: "res.cloudinary.com" },
-      { protocol: "https", hostname: "image.mux.com" }
-    ]
-  },
-  experimental: {
-    serverActions: {
-      bodySizeLimit: "25mb"
-    }
-  }
-};
+DATABASE_URL=
 
-export default nextConfig;
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
+CLERK_SECRET_KEY=
+
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+
+OPENAI_API_KEY=
+
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
+
+MUX_TOKEN_ID=
+MUX_TOKEN_SECRET=
+
+RESEND_API_KEY=
+
+POSTHOG_KEY=
+NEXT_PUBLIC_POSTHOG_KEY=
+NEXT_PUBLIC_GA_MEASUREMENT_ID=
+
+SENTRY_DSN=

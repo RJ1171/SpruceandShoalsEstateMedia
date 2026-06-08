@@ -1,17 +1,22 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+export type UserRole = "OWNER" | "ADMIN" | "MEMBER" | "VIEWER";
 
-const isProtectedRoute = createRouteMatcher(["/dashboard(.*)", "/admin(.*)", "/api/video(.*)"]);
+export type AssetType = "PHOTO" | "VIDEO" | "AUDIO" | "LOGO" | "HEADSHOT" | "BRAND_ASSET";
 
-export default clerkMiddleware(async (auth, req) => {
-  if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || !process.env.CLERK_SECRET_KEY) {
-    return;
-  }
+export type VideoFormat = "VERTICAL" | "HORIZONTAL" | "SQUARE";
 
-  if (isProtectedRoute(req)) {
-    await auth.protect();
-  }
-});
+export type ProjectStatus = "DRAFT" | "UPLOADING" | "GENERATING" | "READY" | "EXPORTED" | "ARCHIVED";
 
-export const config = {
-  matcher: ["/((?!_next|.*\\..*).*)"]
+export type PropertyDetails = {
+  address: string;
+  price?: number;
+  bedrooms?: number;
+  bathrooms?: number;
+  squareFeet?: number;
+  description?: string;
+};
+
+export type AiGenerationRequest = {
+  property: PropertyDetails;
+  tone: "MLS" | "LUXURY" | "SOCIAL" | "OPEN_HOUSE";
+  brandProfileId?: string;
 };

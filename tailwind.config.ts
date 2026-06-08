@@ -1,7 +1,6 @@
-import * as Sentry from "@sentry/nextjs";
+/// <reference types="next" />
+/// <reference types="next/image-types/global" />
+/// <reference path="./.next/types/routes.d.ts" />
 
-Sentry.init({
-  dsn: process.env.SENTRY_DSN,
-  tracesSampleRate: process.env.NODE_ENV === "production" ? 0.1 : 1,
-  environment: process.env.NODE_ENV
-});
+// NOTE: This file should not be edited
+// see https://nextjs.org/docs/app/api-reference/config/typescript for more information.
