@@ -1,26 +1,12 @@
-NEXT_PUBLIC_APP_URL=
+import { Button, Heading, Text } from "@react-email/components";
+import { EmailFrame } from "@/emails/base";
 
-DATABASE_URL=
-
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
-CLERK_SECRET_KEY=
-
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-
-OPENAI_API_KEY=
-
-CLOUDINARY_CLOUD_NAME=
-CLOUDINARY_API_KEY=
-CLOUDINARY_API_SECRET=
-
-MUX_TOKEN_ID=
-MUX_TOKEN_SECRET=
-
-RESEND_API_KEY=
-
-POSTHOG_KEY=
-NEXT_PUBLIC_POSTHOG_KEY=
-NEXT_PUBLIC_GA_MEASUREMENT_ID=
-
-SENTRY_DSN=
+export function ExportCompletedEmail({ exportUrl }: { exportUrl: string }) {
+  return (
+    <EmailFrame preview="Your export is complete">
+      <Heading style={{ fontFamily: "Georgia, serif", color: "#17233B" }}>Export complete</Heading>
+      <Text>Your final media export is ready to download and share.</Text>
+      <Button href={exportUrl} style={{ backgroundColor: "#17233B", color: "#FFFFFF", padding: "12px 18px" }}>Download export</Button>
+    </EmailFrame>
+  );
+}

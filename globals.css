@@ -1,33 +1,37 @@
-# Estate Reel Studio
+"use server";
 
-A production-oriented AI real estate media platform scaffold for luxury listing teams. It includes an original New England-inspired brand system, polished landing page, authenticated dashboard, project workflow, media library, brand center, video studio, admin panel, Prisma schema, AI routes, video generation architecture, email templates, analytics hooks, and deployment documentation.
+import { auth } from "@clerk/nextjs/server";
+import { z } from "zod";
+import { prisma } from "@/lib/db";
+import { trackServerEvent } from "@/lib/analytics";
 
-## Brand
+const projectSchema = z.object({
+  organizationId: z.string(),
+  name: z.string().min(2),
+  address: z.string().min(3)
+});
 
-All editable brand defaults live in `config/brand.ts`.
+export async function createProjectAction(payload: z.infer<typeof projectSchema>) {
+  const { userId } = await auth();
 
-## Core Directories
+  if (!userId) {
+    throw new Error("Authentication required.");
+  }
 
-- `app`: Next.js routes, dashboard, admin, and API handlers
-- `components`: shared UI and product components
-- `lib`: service clients and orchestration helpers
-- `hooks`: reusable client hooks
-- `actions`: server actions
-- `types`: platform types
-- `emails`: React Email templates
-- `public`: static assets
-- `prisma`: database schema
-- `config`: brand and product configuration
-- `docs`: deployment and setup guides
+  const data = projectSchema.parse(payload);
+  const project = await prisma.project.create({
+    data: {
+      name: data.name,
+      status: "DRAFT",
+      organizationId: data.organizationId,
+      property: {
+        create: {
+          address: data.address
+        }
+      }
+    }
+  });
 
-## Quick Start
-
-```bash
-npm install
-cp .env.example .env.local
-npm run prisma:generate
-npm run prisma:migrate
-npm run dev
-```
-
-See `docs/local-setup.md` and `docs/production-deployment.md` for full setup.
+  trackServerEvent("project_created", { projectId: project.id, userId });
+  return project;
+}
