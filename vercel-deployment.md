@@ -1,24 +1,34 @@
-import Link from "next/link";
-import { Plus, UploadCloud } from "lucide-react";
+import { FileAudio, Image as ImageIcon, UploadCloud, Video, type LucideIcon } from "lucide-react";
 import { DashboardShell } from "@/components/dashboard-shell";
-import { Button, buttonClassName } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { UploadWorkspace } from "@/components/upload-workspace";
 
-export default function ProjectsPage() {
+const libraries: Array<[string, LucideIcon]> = [
+  ["Photos", ImageIcon],
+  ["Videos", Video],
+  ["Audio", FileAudio],
+  ["Logos and headshots", ImageIcon]
+];
+
+export default function MediaPage() {
   return (
-    <DashboardShell title="Projects" subtitle="Create, duplicate, archive, and manage listing campaigns from a single operational view.">
-      <div className="mb-6 flex flex-wrap gap-3">
-        <Button><Plus size={16} /> Create project</Button>
-        <Button variant="secondary"><UploadCloud size={16} /> Upload media</Button>
+    <DashboardShell title="Media Library" subtitle="Organize photos, generated videos, audio tracks, logos, headshots, and reusable brand assets.">
+      <Button><UploadCloud size={16} /> Upload assets</Button>
+      <div className="mt-6 grid gap-4 md:grid-cols-4">
+        {libraries.map(([label, Icon]) => (
+          <Card key={label} className="outline-tile p-6">
+            <div className="flex h-12 w-12 items-center justify-center rounded-md border border-gold/40 bg-white">
+              <Icon className="text-gold" size={24} />
+            </div>
+            <h2 className="mt-4 font-serif text-2xl font-semibold text-pine">{label}</h2>
+            <p className="mt-2 text-sm text-charcoal/65">No assets uploaded yet</p>
+          </Card>
+        ))}
       </div>
-      <Card className="corner-frame p-8 text-center">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-md border border-gold/40 bg-cream">
-          <UploadCloud className="text-gold" size={28} />
-        </div>
-        <h2 className="mt-4 font-serif text-3xl font-semibold text-pine">No listing projects yet</h2>
-        <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-charcoal/65">Start in the studio by uploading listing photos, property details, descriptions, logos, and media assets.</p>
-        <Link href="/dashboard/studio" className={buttonClassName("primary", "mt-6")}>Create first project <Plus size={16} /></Link>
-      </Card>
+      <div className="mt-6">
+        <UploadWorkspace compact />
+      </div>
     </DashboardShell>
   );
 }

@@ -1,12 +1,27 @@
-# Clerk Setup Guide
+import { z } from "zod";
 
-1. Create a Clerk application.
-2. Enable email/password and any desired SSO providers.
-3. Set `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY`.
-4. Configure redirect URLs:
-   - Development: `http://localhost:3000/dashboard`
-   - Production: `${NEXT_PUBLIC_APP_URL}/dashboard`
-5. Configure a webhook pointed at `/api/webhooks/clerk`.
-6. Add Svix signature verification before turning the webhook on for production writes.
+export const videoGenerationSchema = z.object({
+  projectId: z.string(),
+  templateId: z.string(),
+  format: z.enum(["VERTICAL", "HORIZONTAL", "SQUARE"]),
+  voiceId: z.string().optional(),
+  musicId: z.string().optional(),
+  brandProfileId: z.string()
+});
 
-Use Clerk organization metadata or the Prisma `Organization` and `Membership` tables as the source of truth. Avoid splitting authority between both without a sync policy.
+export type VideoGenerationJob = z.infer<typeof videoGenerationSchema>;
+
+export async function enqueueVideoGeneration(job: VideoGenerationJob) {
+  // Production path: persist a job row, invoke FFmpeg workers, upload mezzanine output to Mux, and emit lifecycle webhooks.
+  return {
+    id: `job_${job.projectId}_${Date.now()}`,
+    status: "QUEUED",
+    providers: ["ffmpeg", "mux", "openai", "replicate"]
+  };
+}
+
+export const futureVideoProviders = {
+  replicate: ["image-enhancement", "virtual-staging"],
+  runway: ["text-to-video", "motion-brush"],
+  stability: ["sky-replacement", "image-upscale"]
+};

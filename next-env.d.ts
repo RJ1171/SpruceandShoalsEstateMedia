@@ -1,5 +1,9 @@
-export async function register() {
-  if (process.env.NEXT_RUNTIME === "nodejs" && process.env.SENTRY_DSN) {
-    await import("./sentry.server.config");
-  }
-}
+.next
+node_modules
+.env
+.env.local
+.env.*.local
+dist
+coverage
+*.tsbuildinfo
+prisma/dev.db
