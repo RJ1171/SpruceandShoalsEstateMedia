@@ -1,37 +1,28 @@
-"use server";
+import { Activity, Flag, LifeBuoy, ShieldCheck, Users, type LucideIcon } from "lucide-react";
+import { DashboardShell } from "../../components/dashboard-shell";
+import { Card } from "../../components/ui/card";
 
-import { auth } from "@clerk/nextjs/server";
-import { z } from "zod";
-import { prisma } from "@/lib/db";
-import { trackServerEvent } from "@/lib/analytics";
+const tools: Array<[string, LucideIcon]> = [
+  ["User management", Users],
+  ["Usage analytics", Activity],
+  ["Feature flags", Flag],
+  ["System monitoring", ShieldCheck],
+  ["Support tools", LifeBuoy],
+  ["Content moderation", ShieldCheck]
+];
 
-const projectSchema = z.object({
-  organizationId: z.string(),
-  name: z.string().min(2),
-  address: z.string().min(3)
-});
-
-export async function createProjectAction(payload: z.infer<typeof projectSchema>) {
-  const { userId } = await auth();
-
-  if (!userId) {
-    throw new Error("Authentication required.");
-  }
-
-  const data = projectSchema.parse(payload);
-  const project = await prisma.project.create({
-    data: {
-      name: data.name,
-      status: "DRAFT",
-      organizationId: data.organizationId,
-      property: {
-        create: {
-          address: data.address
-        }
-      }
-    }
-  });
-
-  trackServerEvent("project_created", { projectId: project.id, userId });
-  return project;
+export default function AdminPage() {
+  return (
+    <DashboardShell title="Admin Panel" subtitle="Operational controls for growth, support, reliability, and responsible content governance.">
+      <div className="grid gap-4 md:grid-cols-3">
+        {tools.map(([label, Icon]) => (
+          <Card key={label} className="p-6">
+            <Icon size={24} className="text-gold" />
+            <h2 className="mt-4 font-serif text-2xl font-semibold text-pine">{label}</h2>
+            <p className="mt-3 text-sm leading-6 text-charcoal/70">Production module placeholder ready for RBAC, audit logs, and metrics instrumentation.</p>
+          </Card>
+        ))}
+      </div>
+    </DashboardShell>
+  );
 }

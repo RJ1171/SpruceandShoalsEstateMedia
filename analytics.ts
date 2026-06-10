@@ -1,18 +1,14 @@
-"use client";
+import * as React from "react";
+import { cn } from "../../lib/utils";
 
-import { useMemo, useState } from "react";
-
-export function useUploadState() {
-  const [files, setFiles] = useState<File[]>([]);
-  const [isUploading, setIsUploading] = useState(false);
-
-  const totalSize = useMemo(() => files.reduce((sum, file) => sum + file.size, 0), [files]);
-
-  return {
-    files,
-    setFiles,
-    isUploading,
-    setIsUploading,
-    totalSize
-  };
+export function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div
+      className={cn(
+        "rounded-lg border border-pine/20 bg-white shadow-[0_18px_45px_rgba(15,44,37,0.08)] ring-1 ring-white/70",
+        className
+      )}
+      {...props}
+    />
+  );
 }

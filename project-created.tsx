@@ -1,12 +1,11 @@
-import { Button, Heading, Text } from "@react-email/components";
-import { EmailFrame } from "@/emails/base";
+import { Card } from "./ui/card";
 
-export function PasswordResetEmail({ resetUrl }: { resetUrl: string }) {
+export function MetricCard({ label, value, detail }: { label: string; value: string; detail: string }) {
   return (
-    <EmailFrame preview="Reset your password">
-      <Heading style={{ fontFamily: "Georgia, serif", color: "#17233B" }}>Reset your password</Heading>
-      <Text>Use the secure link below to finish resetting your account credentials.</Text>
-      <Button href={resetUrl} style={{ backgroundColor: "#17233B", color: "#FFFFFF", padding: "12px 18px" }}>Reset password</Button>
-    </EmailFrame>
+    <Card className="p-5">
+      <p className="text-sm font-medium text-charcoal/60">{label}</p>
+      <p className="mt-3 font-serif text-4xl font-semibold text-pine">{value}</p>
+      <p className="mt-2 text-xs uppercase tracking-[0.16em] text-gold">{detail}</p>
+    </Card>
   );
 }

@@ -1,27 +1,24 @@
-import { z } from "zod";
+# Production Deployment Guide
 
-export const videoGenerationSchema = z.object({
-  projectId: z.string(),
-  templateId: z.string(),
-  format: z.enum(["VERTICAL", "HORIZONTAL", "SQUARE"]),
-  voiceId: z.string().optional(),
-  musicId: z.string().optional(),
-  brandProfileId: z.string()
-});
+## Launch Checklist
 
-export type VideoGenerationJob = z.infer<typeof videoGenerationSchema>;
+- Provision production Postgres and run Prisma migrations.
+- Configure Clerk production keys, redirects, and webhooks.
+- Configure Cloudinary signed upload presets.
+- Configure Mux credentials and webhook processing.
+- Configure Resend verified sending domain.
+- Configure PostHog and Google Analytics.
+- Configure Sentry alerts and release tracking.
+- Configure Cloudflare DNS, WAF, CDN, and security policies.
+- Run accessibility, mobile, and performance QA.
+- Confirm legal review for generated listing copy disclaimers.
 
-export async function enqueueVideoGeneration(job: VideoGenerationJob) {
-  // Production path: persist a job row, invoke FFmpeg workers, upload mezzanine output to Mux, and emit lifecycle webhooks.
-  return {
-    id: `job_${job.projectId}_${Date.now()}`,
-    status: "QUEUED",
-    providers: ["ffmpeg", "mux", "openai", "replicate"]
-  };
-}
+## Scaling Plan
 
-export const futureVideoProviders = {
-  replicate: ["image-enhancement", "virtual-staging"],
-  runway: ["text-to-video", "motion-brush"],
-  stability: ["sky-replacement", "image-upscale"]
-};
+- Keep web requests short. Long-running video work should run through background jobs.
+- Store immutable asset metadata in Postgres and media binaries in Cloudinary, Mux, or Supabase storage.
+- Use organization-scoped indexes for project, asset, video, export, and usage queries.
+- Add rate limits for AI generation, uploads, and exports.
+- Cache public landing pages and lead pages at the CDN edge.
+- Add queue-level concurrency controls for FFmpeg and provider APIs.
+- Use usage tracking to drive billing limits, abuse monitoring, and customer success alerts.
