@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { BarChart3, FolderKanban, Images, LayoutDashboard, Palette, Shield, Video } from "lucide-react";
 import { brand } from "../config/brand";
-import { cn } from "../lib/utils";
+import { cn } from "@/lib/utils";
 
 const nav = [
   ["Dashboard", "/dashboard", LayoutDashboard],

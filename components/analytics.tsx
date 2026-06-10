@@ -1,21 +1,8 @@
 "use client";
 
 import Script from "next/script";
-import posthog from "posthog-js";
-import { useEffect } from "react";
 
 export function Analytics() {
-  useEffect(() => {
-    const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
-
-    if (key && typeof window !== "undefined") {
-      posthog.init(key, {
-        api_host: "https://app.posthog.com",
-        capture_pageview: true
-      });
-    }
-  }, []);
-
   const gaId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
 
   return gaId ? (

@@ -1,23 +1,37 @@
-export type AnalyticsEvent =
-  | "signup_started"
-  | "project_created"
-  | "media_uploaded"
-  | "description_generated"
-  | "video_generation_started"
-  | "export_completed";
+import type { Config } from "tailwindcss";
 
-export function trackServerEvent(event: AnalyticsEvent, properties: Record<string, unknown> = {}) {
-  if (!process.env.POSTHOG_KEY) {
-    return;
-  }
+const config: Config = {
+  content: [
+    "./app/**/*.{ts,tsx}",
+    "./components/**/*.{ts,tsx}",
+    "./emails/**/*.{ts,tsx}",
+    "./config/**/*.{ts,tsx}"
+  ],
+  theme: {
+    extend: {
+      colors: {
+        pine: "#173F35",
+        forest: "#0F2C25",
+        gold: "#C6A15B",
+        mutedGold: "#A8843F",
+        tan: "#D8C7A3",
+        cream: "#FBF8F1",
+        offWhite: "#F7F3EA",
+        navy: "#173F35",
+        charcoal: "#1F2933",
+        muted: "#6B7280",
+        linen: "#D8C7A3"
+      },
+      fontFamily: {
+        serif: ["var(--font-display)", "Georgia", "serif"],
+        sans: ["var(--font-sans)", "Inter", "Arial", "sans-serif"]
+      },
+      boxShadow: {
+        luxury: "0 22px 70px rgba(23, 35, 59, 0.14)"
+      }
+    }
+  },
+  plugins: []
+};
 
-  void fetch("https://app.posthog.com/capture/", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      api_key: process.env.POSTHOG_KEY,
-      event,
-      properties
-    })
-  }).catch(() => undefined);
-}
+export default config;

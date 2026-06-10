@@ -1,9 +1,13 @@
-import { Resend } from "resend";
+export type EmailMessage = {
+  to: string;
+  subject: string;
+  html: string;
+};
 
-export function getResendClient() {
-  if (!process.env.RESEND_API_KEY) {
-    throw new Error("RESEND_API_KEY is not configured.");
-  }
-
-  return new Resend(process.env.RESEND_API_KEY);
+export async function sendEmail(message: EmailMessage) {
+  return {
+    id: `local-${Date.now()}`,
+    provider: "placeholder",
+    to: message.to
+  };
 }

@@ -1,11 +1,41 @@
-import { Heading, Text } from "@react-email/components";
-import { EmailFrame } from "./base";
-
-export function WelcomeEmail({ name = "there" }: { name?: string }) {
-  return (
-    <EmailFrame preview="Welcome to your AI real estate media studio">
-      <Heading style={{ fontFamily: "Georgia, serif", color: "#17233B" }}>Welcome, {name}.</Heading>
-      <Text>Your studio is ready for listing videos, descriptions, social captions, and brand-controlled campaign assets.</Text>
-    </EmailFrame>
-  );
+{
+  "name": "spruce-shoals-estate-media",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@clerk/nextjs": "latest",
+    "@hookform/resolvers": "latest",
+    "@prisma/client": "latest",
+    "@react-email/components": "latest",
+    "@supabase/supabase-js": "latest",
+    "class-variance-authority": "latest",
+    "clsx": "latest",
+    "framer-motion": "latest",
+    "lucide-react": "latest",
+    "next": "15.5.19",
+    "openai": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "react-hook-form": "latest",
+    "tailwind-merge": "latest",
+    "zod": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "autoprefixer": "latest",
+    "eslint": "latest",
+    "eslint-config-next": "latest",
+    "postcss": "latest",
+    "prisma": "latest",
+    "tailwindcss": "latest",
+    "typescript": "latest"
+  }
 }

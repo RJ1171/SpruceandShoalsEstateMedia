@@ -1,10 +1,22 @@
-import { v2 as cloudinary } from "cloudinary";
+export type UploadAssetInput = {
+  fileName: string;
+  mimeType: string;
+  data: ArrayBuffer;
+  folder?: string;
+};
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-  secure: true
-});
+export type UploadedAsset = {
+  url: string;
+  provider: "placeholder";
+  publicId: string;
+};
 
-export { cloudinary };
+export async function uploadAsset(input: UploadAssetInput): Promise<UploadedAsset> {
+  const publicId = `${input.folder || "uploads"}/${input.fileName}`;
+
+  return {
+    url: `/uploads/${input.fileName}`,
+    provider: "placeholder",
+    publicId
+  };
+}
