@@ -9,8 +9,7 @@
     "node_modules",
     ".next",
     "work",
-    "outputs",
-    "ai.ts"
+    "outputs"
   ],
   "compilerOptions": {
     "target": "ES2017",
