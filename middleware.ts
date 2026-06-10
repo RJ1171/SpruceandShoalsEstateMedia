@@ -1,12 +1,19 @@
-import { Button, Heading, Text } from "@react-email/components";
-import { EmailFrame } from "./base";
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
 
-export function PasswordResetEmail({ resetUrl }: { resetUrl: string }) {
-  return (
-    <EmailFrame preview="Reset your password">
-      <Heading style={{ fontFamily: "Georgia, serif", color: "#17233B" }}>Reset your password</Heading>
-      <Text>Use the secure link below to finish resetting your account credentials.</Text>
-      <Button href={resetUrl} style={{ backgroundColor: "#17233B", color: "#FFFFFF", padding: "12px 18px" }}>Reset password</Button>
-    </EmailFrame>
-  );
-}
+const isProtectedRoute = createRouteMatcher(["/dashboard(.*)", "/admin(.*)", "/api/video(.*)"]);
+const hasClerkKeys = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY);
+
+const middleware = hasClerkKeys
+  ? clerkMiddleware(async (auth, req) => {
+      if (isProtectedRoute(req)) {
+        await auth.protect();
+      }
+    })
+  : () => NextResponse.next();
+
+export default middleware;
+
+export const config = {
+  matcher: ["/((?!_next|.*\\..*).*)"]
+};

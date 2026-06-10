@@ -1,0 +1,16 @@
+# Vercel Deployment Guide
+
+1. Create a new Vercel project from this repository.
+2. Set all variables from `.env.example`.
+3. Add the production PostgreSQL `DATABASE_URL`.
+4. Run `prisma migrate deploy` during deployment or from a secure release job.
+5. Configure the production domain in `NEXT_PUBLIC_APP_URL`.
+6. Enable Vercel Analytics or keep PostHog as the primary product analytics layer.
+7. Connect Sentry using the project `SENTRY_DSN`.
+
+Recommended production settings:
+
+- Node.js runtime: 20+
+- Image optimization enabled
+- Preview deployments protected for client-facing work
+- Separate staging and production Clerk applications
