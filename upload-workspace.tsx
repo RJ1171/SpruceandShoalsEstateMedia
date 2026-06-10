@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { generatePropertyDescription, propertyPayloadSchema } from "@/lib/ai";
-import { trackServerEvent } from "@/lib/analytics";
+import { generatePropertyDescription, propertyPayloadSchema } from "../../../../lib/ai";
+import { trackServerEvent } from "../../../../lib/analytics";
 
 export async function POST(request: Request) {
   try {

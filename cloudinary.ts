@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { brand } from "@/config/brand";
-import { getOpenAIClient } from "@/lib/openai";
+import { brand } from "../config/brand";
+import { getOpenAIClient } from "./openai";
 
 export const propertyPayloadSchema = z.object({
   address: z.string().min(3),

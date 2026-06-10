@@ -1,8 +1,8 @@
 import { FileAudio, Image as ImageIcon, UploadCloud, Video, type LucideIcon } from "lucide-react";
-import { DashboardShell } from "@/components/dashboard-shell";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { UploadWorkspace } from "@/components/upload-workspace";
+import { DashboardShell } from "../../../components/dashboard-shell";
+import { Button } from "../../../components/ui/button";
+import { Card } from "../../../components/ui/card";
+import { UploadWorkspace } from "../../../components/upload-workspace";
 
 const libraries: Array<[string, LucideIcon]> = [
   ["Photos", ImageIcon],

@@ -1,7 +1,7 @@
-import { brand } from "@/config/brand";
-import { DashboardShell } from "@/components/dashboard-shell";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { brand } from "../../../config/brand";
+import { DashboardShell } from "../../../components/dashboard-shell";
+import { Button } from "../../../components/ui/button";
+import { Card } from "../../../components/ui/card";
 
 export default function BrandPage() {
   return (

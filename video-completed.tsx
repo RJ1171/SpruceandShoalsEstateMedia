@@ -1,8 +1,8 @@
 import { Music, Rows3, Sparkles, UploadCloud, Video, type LucideIcon } from "lucide-react";
-import { DashboardShell } from "@/components/dashboard-shell";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { UploadWorkspace } from "@/components/upload-workspace";
+import { DashboardShell } from "../../../components/dashboard-shell";
+import { Button } from "../../../components/ui/button";
+import { Card } from "../../../components/ui/card";
+import { UploadWorkspace } from "../../../components/upload-workspace";
 
 const workflow: Array<[string, LucideIcon]> = [
   ["Upload property photos", UploadCloud],

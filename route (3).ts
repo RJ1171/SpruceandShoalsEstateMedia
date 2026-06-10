@@ -2,8 +2,8 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { z } from "zod";
-import { prisma } from "@/lib/db";
-import { trackServerEvent } from "@/lib/analytics";
+import { prisma } from "../lib/db";
+import { trackServerEvent } from "../lib/analytics";
 
 const projectSchema = z.object({
   organizationId: z.string(),

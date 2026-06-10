@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { trackServerEvent } from "@/lib/analytics";
-import { enqueueVideoGeneration, videoGenerationSchema } from "@/lib/video";
+import { trackServerEvent } from "../../../../lib/analytics";
+import { enqueueVideoGeneration, videoGenerationSchema } from "../../../../lib/video";
 
 export async function POST(request: Request) {
   const { userId } = await auth();

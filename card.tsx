@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { generateVideoScript, propertyPayloadSchema } from "@/lib/ai";
+import { generateVideoScript, propertyPayloadSchema } from "../../../../lib/ai";
 
 export async function POST(request: Request) {
   try {

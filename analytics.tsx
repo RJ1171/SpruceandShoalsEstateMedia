@@ -1,6 +1,6 @@
 import { Activity, Flag, LifeBuoy, ShieldCheck, Users, type LucideIcon } from "lucide-react";
-import { DashboardShell } from "@/components/dashboard-shell";
-import { Card } from "@/components/ui/card";
+import { DashboardShell } from "../../components/dashboard-shell";
+import { Card } from "../../components/ui/card";
 
 const tools: Array<[string, LucideIcon]> = [
   ["User management", Users],

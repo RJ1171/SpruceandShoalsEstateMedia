@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { Plus, UploadCloud } from "lucide-react";
-import { DashboardShell } from "@/components/dashboard-shell";
-import { Button, buttonClassName } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { DashboardShell } from "../../../components/dashboard-shell";
+import { Button, buttonClassName } from "../../../components/ui/button";
+import { Card } from "../../../components/ui/card";
 
 export default function ProjectsPage() {
   return (
