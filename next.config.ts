@@ -1,17 +1,11 @@
-import type { NextConfig } from "next";
+import { Heading, Text } from "@react-email/components";
+import { EmailFrame } from "./base";
 
-const nextConfig: NextConfig = {
-  images: {
-    remotePatterns: [
-      { protocol: "https", hostname: "res.cloudinary.com" },
-      { protocol: "https", hostname: "image.mux.com" }
-    ]
-  },
-  experimental: {
-    serverActions: {
-      bodySizeLimit: "25mb"
-    }
-  }
-};
-
-export default nextConfig;
+export function ProjectCreatedEmail({ projectName }: { projectName: string }) {
+  return (
+    <EmailFrame preview="Your listing project has been created">
+      <Heading style={{ fontFamily: "Georgia, serif", color: "#17233B" }}>{projectName} is ready.</Heading>
+      <Text>Upload media, choose a template, and start generating campaign assets whenever you are ready.</Text>
+    </EmailFrame>
+  );
+}
