@@ -1,11 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ["@remotion/renderer", "@remotion/bundler"],
+  serverExternalPackages: ["@remotion/renderer", "@remotion/bundler", "@sparticuz/chromium"],
   outputFileTracingIncludes: {
     "/api/render": [
       "./remotion/**/*",
-      "./node_modules/@remotion/compositor-linux-x64-gnu/**/*"
+      "./node_modules/@remotion/compositor-linux-x64-gnu/**/*",
+      "./node_modules/@sparticuz/chromium/**/*"
     ]
   },
   images: {

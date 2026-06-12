@@ -1,6 +1,7 @@
 import { bundle } from "@remotion/bundler";
 import { ensureBrowser, renderMedia, selectComposition } from "@remotion/renderer";
-import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import chromium from "@sparticuz/chromium";
+import { readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import type { ListingVideoProps } from "../../remotion/ListingVideo";
@@ -29,21 +30,16 @@ function getBundle() {
 function getBrowserExecutable() {
   if (!globalThis.spruceShoalsBrowserExecutable) {
     globalThis.spruceShoalsBrowserExecutable = (async () => {
-      const browserRoot = path.join(tmpdir(), "spruce-shoals-remotion");
-      await mkdir(browserRoot, { recursive: true });
-      await writeFile(path.join(browserRoot, "package.json"), "{}");
-
-      const previousDirectory = process.cwd();
-      try {
-        process.chdir(browserRoot);
-        const browser = await ensureBrowser({ chromeMode: "headless-shell", logLevel: "warn" });
-        if (browser.type === "no-browser" || browser.type === "version-mismatch") {
-          throw new Error("Chrome Headless Shell could not be prepared for rendering.");
-        }
-        return browser.path;
-      } finally {
-        process.chdir(previousDirectory);
+      if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
+        chromium.setGraphicsMode = false;
+        return chromium.executablePath();
       }
+
+      const browser = await ensureBrowser({ chromeMode: "headless-shell", logLevel: "warn" });
+      if (browser.type === "no-browser" || browser.type === "version-mismatch") {
+        throw new Error("Chrome Headless Shell could not be prepared for rendering.");
+      }
+      return browser.path;
     })();
   }
 
