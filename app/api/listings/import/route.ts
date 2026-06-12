@@ -72,7 +72,9 @@ export async function POST(request: Request) {
       );
     }
 
-    return NextResponse.json({ images });
+    return NextResponse.json({
+      images: images.map((image) => `/api/listings/image?url=${encodeURIComponent(image)}`)
+    });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: "Enter a valid listing URL." }, { status: 400 });

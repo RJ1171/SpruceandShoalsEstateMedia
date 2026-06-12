@@ -135,6 +135,9 @@ export function VideoCreationWorkflow() {
   const [previewIndex, setPreviewIndex] = useState(0);
   const [renderProgress, setRenderProgress] = useState(0);
   const [shareCopied, setShareCopied] = useState(false);
+  const [isEncoding, setIsEncoding] = useState(false);
+  const [encodeProgress, setEncodeProgress] = useState(0);
+  const [encodeError, setEncodeError] = useState("");
 
   const selectedScenes = useMemo(() => scenes.filter((scene) => scene.selected), [scenes]);
   const activeScene = scenes.find((scene) => scene.id === activeSceneId) ?? selectedScenes[0];
@@ -260,7 +263,7 @@ export function VideoCreationWorkflow() {
     setStep((Math.min(6, step + 1) as Step));
   }
 
-  function downloadProject() {
+  function downloadProjectBackup() {
     const packageData = {
       project: details,
       format: { orientation, resolution, estimatedSeconds },
@@ -274,6 +277,210 @@ export function VideoCreationWorkflow() {
     anchor.download = `${details.name.trim().replace(/\s+/g, "-").toLowerCase() || "listing"}-video-package.json`;
     anchor.click();
     URL.revokeObjectURL(url);
+  }
+
+  function loadImage(src: string) {
+    return new Promise<HTMLImageElement>((resolve, reject) => {
+      const image = new Image();
+      image.crossOrigin = "anonymous";
+      image.onload = () => resolve(image);
+      image.onerror = () => reject(new Error(`Could not load ${src}`));
+      image.src = src;
+    });
+  }
+
+  function drawCover(
+    context: CanvasRenderingContext2D,
+    image: HTMLImageElement,
+    width: number,
+    height: number,
+    progress: number,
+    scene: Scene
+  ) {
+    const baseScale = Math.max(width / image.naturalWidth, height / image.naturalHeight);
+    const zoomDirection = scene.motion === "Push out" ? 1 - progress : progress;
+    const zoom = scene.motion === "Auto" || scene.motion.startsWith("Push") ? 1 + zoomDirection * 0.08 : 1.04;
+    const drawWidth = image.naturalWidth * baseScale * zoom;
+    const drawHeight = image.naturalHeight * baseScale * zoom;
+    const maxX = Math.max(0, drawWidth - width);
+    const maxY = Math.max(0, drawHeight - height);
+    let x = -(scene.focusX / 100) * maxX;
+    const y = -(scene.focusY / 100) * maxY;
+
+    if (scene.motion === "Pan left") x = -maxX * progress;
+    if (scene.motion === "Pan right") x = -maxX * (1 - progress);
+
+    context.save();
+    context.filter =
+      scene.enhancement === "Brighten" ? "brightness(1.12) contrast(1.04) saturate(1.05)" :
+      scene.enhancement === "Twilight" ? "brightness(0.82) contrast(1.12) saturate(1.2) hue-rotate(8deg)" :
+      scene.enhancement === "Virtual stage" ? "brightness(1.06) contrast(1.08) saturate(1.12)" : "none";
+    context.drawImage(image, x, y, drawWidth, drawHeight);
+    context.restore();
+  }
+
+  function drawWrappedText(context: CanvasRenderingContext2D, text: string, x: number, y: number, maxWidth: number, lineHeight: number) {
+    const words = text.split(/\s+/);
+    let line = "";
+    let lineY = y;
+    for (const word of words) {
+      const next = line ? `${line} ${word}` : word;
+      if (context.measureText(next).width > maxWidth && line) {
+        context.fillText(line, x, lineY);
+        line = word;
+        lineY += lineHeight;
+      } else {
+        line = next;
+      }
+    }
+    if (line) context.fillText(line, x, lineY);
+  }
+
+  async function renderVideo() {
+    if (!selectedScenes.length || isEncoding) return;
+    setIsEncoding(true);
+    setEncodeProgress(0);
+    setEncodeError("");
+
+    try {
+      if (!("MediaRecorder" in window)) throw new Error("This browser cannot encode video. Use current Chrome or Edge.");
+
+      const dimensions = orientation === "portrait"
+        ? resolution === "1080p" ? [1080, 1920] : [720, 1280]
+        : orientation === "square"
+          ? resolution === "1080p" ? [1080, 1080] : [720, 720]
+          : resolution === "1080p" ? [1920, 1080] : [1280, 720];
+      const canvas = document.createElement("canvas");
+      canvas.width = dimensions[0];
+      canvas.height = dimensions[1];
+      const context = canvas.getContext("2d");
+      if (!context) throw new Error("Video canvas could not be initialized.");
+
+      const images = await Promise.all(selectedScenes.map((scene) => loadImage(scene.src)));
+      const logo = logoUrl ? await loadImage(logoUrl).catch(() => null) : null;
+      const headshot = headshotUrl ? await loadImage(headshotUrl).catch(() => null) : null;
+      const stream = canvas.captureStream(30);
+      const mimeType = ["video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"].find((type) => MediaRecorder.isTypeSupported(type));
+      if (!mimeType) throw new Error("This browser does not support WebM video encoding.");
+
+      const recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: resolution === "1080p" ? 8_000_000 : 4_000_000 });
+      const chunks: BlobPart[] = [];
+      recorder.ondataavailable = (event) => { if (event.data.size) chunks.push(event.data); };
+      const stopped = new Promise<Blob>((resolve, reject) => {
+        recorder.onerror = () => reject(new Error("The browser video encoder stopped unexpectedly."));
+        recorder.onstop = () => resolve(new Blob(chunks, { type: mimeType }));
+      });
+      recorder.start(1000);
+
+      const totalDuration = selectedScenes.length * 3000 + (includeIntro ? 2500 : 0) + (includeOutro ? 2500 : 0);
+      let elapsed = 0;
+      const frame = (duration: number, draw: (progress: number) => void) => new Promise<void>((resolve) => {
+        const started = performance.now();
+        const tick = (now: number) => {
+          const progress = Math.min(1, (now - started) / duration);
+          draw(progress);
+          setEncodeProgress(Math.min(99, Math.round(((elapsed + progress * duration) / totalDuration) * 100)));
+          if (progress < 1) requestAnimationFrame(tick);
+          else { elapsed += duration; resolve(); }
+        };
+        requestAnimationFrame(tick);
+      });
+
+      const drawBackground = () => {
+        context.fillStyle = selectedTemplate.surface;
+        context.fillRect(0, 0, canvas.width, canvas.height);
+      };
+
+      if (includeIntro) {
+        await frame(2500, (progress) => {
+          drawBackground();
+          context.globalAlpha = Math.min(1, progress * 2);
+          context.fillStyle = selectedTemplate.accent;
+          context.font = `700 ${Math.round(canvas.width * 0.035)}px Arial`;
+          context.fillText("NEW LISTING", canvas.width * 0.08, canvas.height * 0.38);
+          context.fillStyle = "#FFFFFF";
+          context.font = `600 ${Math.round(canvas.width * 0.065)}px Georgia`;
+          drawWrappedText(context, details.address, canvas.width * 0.08, canvas.height * 0.46, canvas.width * 0.84, canvas.width * 0.075);
+          context.font = `500 ${Math.round(canvas.width * 0.033)}px Arial`;
+          context.fillStyle = "rgba(255,255,255,0.8)";
+          context.fillText(formatPrice(details.price), canvas.width * 0.08, canvas.height * 0.7);
+          context.globalAlpha = 1;
+        });
+      }
+
+      for (let index = 0; index < selectedScenes.length; index += 1) {
+        const scene = selectedScenes[index];
+        const image = images[index];
+        await frame(3000, (progress) => {
+          context.clearRect(0, 0, canvas.width, canvas.height);
+          drawCover(context, image, canvas.width, canvas.height, progress, scene);
+          const gradient = context.createLinearGradient(0, canvas.height * 0.58, 0, canvas.height);
+          gradient.addColorStop(0, "rgba(0,0,0,0)");
+          gradient.addColorStop(1, "rgba(8,25,21,0.9)");
+          context.fillStyle = gradient;
+          context.fillRect(0, 0, canvas.width, canvas.height);
+          context.fillStyle = selectedTemplate.accent;
+          context.font = `700 ${Math.round(canvas.width * 0.026)}px Arial`;
+          context.fillText(`${details.bedrooms || "—"} BEDS  ·  ${details.bathrooms || "—"} BATHS  ·  ${details.squareFeet || "—"} SQ FT`, canvas.width * 0.06, canvas.height * 0.82);
+          context.fillStyle = "#FFFFFF";
+          context.font = `600 ${Math.round(canvas.width * 0.045)}px Georgia`;
+          drawWrappedText(context, details.address, canvas.width * 0.06, canvas.height * 0.88, canvas.width * 0.78, canvas.width * 0.052);
+          if (logo) {
+            const logoWidth = canvas.width * 0.18;
+            const logoHeight = logoWidth * (logo.naturalHeight / logo.naturalWidth);
+            context.drawImage(logo, canvas.width - logoWidth - canvas.width * 0.05, canvas.width * 0.05, logoWidth, logoHeight);
+          } else {
+            context.fillStyle = "rgba(255,255,255,0.92)";
+            context.font = `600 ${Math.round(canvas.width * 0.025)}px Georgia`;
+            context.textAlign = "right";
+            context.fillText("SPRUCE & SHOALS", canvas.width * 0.94, canvas.width * 0.08);
+            context.textAlign = "left";
+          }
+        });
+      }
+
+      if (includeOutro) {
+        await frame(2500, (progress) => {
+          drawBackground();
+          context.globalAlpha = Math.min(1, progress * 2);
+          if (headshot) {
+            const size = canvas.width * 0.22;
+            context.save();
+            context.beginPath();
+            context.arc(canvas.width / 2, canvas.height * 0.3, size / 2, 0, Math.PI * 2);
+            context.clip();
+            context.drawImage(headshot, canvas.width / 2 - size / 2, canvas.height * 0.3 - size / 2, size, size);
+            context.restore();
+          }
+          context.textAlign = "center";
+          context.fillStyle = selectedTemplate.accent;
+          context.font = `700 ${Math.round(canvas.width * 0.03)}px Arial`;
+          context.fillText("SCHEDULE A PRIVATE SHOWING", canvas.width / 2, canvas.height * 0.53);
+          context.fillStyle = "#FFFFFF";
+          context.font = `600 ${Math.round(canvas.width * 0.055)}px Georgia`;
+          context.fillText("Spruce & Shoals", canvas.width / 2, canvas.height * 0.62);
+          context.font = `500 ${Math.round(canvas.width * 0.028)}px Arial`;
+          context.fillStyle = "rgba(255,255,255,0.75)";
+          context.fillText(details.address, canvas.width / 2, canvas.height * 0.69);
+          context.textAlign = "left";
+          context.globalAlpha = 1;
+        });
+      }
+
+      recorder.stop();
+      const video = await stopped;
+      const url = URL.createObjectURL(video);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `${details.name.trim().replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "").toLowerCase() || "listing"}-video.webm`;
+      anchor.click();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setEncodeProgress(100);
+    } catch (error) {
+      setEncodeError(error instanceof Error ? error.message : "Video encoding failed.");
+    } finally {
+      setIsEncoding(false);
+    }
   }
 
   async function copyShareLink() {
@@ -614,17 +821,23 @@ export function VideoCreationWorkflow() {
                   <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-md bg-pine text-gold"><Check size={30} /></div>
                   <p className="mt-6 text-xs font-bold uppercase tracking-[0.2em] text-gold">Ready to publish</p>
                   <h2 className="mt-3 font-serif text-4xl font-semibold text-pine">Your media package is ready.</h2>
-                  <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-charcoal/60">The no-paywall workflow is complete. Connect FFmpeg/Mux to replace this prototype render with the final MP4 while preserving the same project package.</p>
+                  <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-charcoal/60">Create and download a real branded video directly in your browser. Keep the project backup if you want to revise the same campaign later.</p>
                   <div className="mt-8 grid gap-4 text-left sm:grid-cols-3">
                     <Card className="p-5"><Video className="text-gold" size={22} /><p className="mt-3 font-semibold text-pine">Full video</p><p className="mt-1 text-sm text-charcoal/55">{orientation} · {resolution} · {estimatedSeconds}s</p></Card>
                     <Card className="p-5"><Scissors className="text-gold" size={22} /><p className="mt-3 font-semibold text-pine">Scene clips</p><p className="mt-1 text-sm text-charcoal/55">{selectedScenes.length} individual clips</p></Card>
                     <Card className="p-5"><MonitorPlay className="text-gold" size={22} /><p className="mt-3 font-semibold text-pine">Share page</p><p className="mt-1 text-sm text-charcoal/55">Client-ready project link</p></Card>
                   </div>
                   <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
-                    <Button onClick={downloadProject}><Download size={16} /> Download project package</Button>
+                    <Button onClick={renderVideo} disabled={isEncoding}>
+                      {isEncoding ? <Loader2 className="animate-spin" size={16} /> : <Download size={16} />}
+                      {isEncoding ? `Encoding ${encodeProgress}%` : "Download video"}
+                    </Button>
                     <Button variant="secondary" onClick={copyShareLink}>{shareCopied ? <Check size={16} /> : <Copy size={16} />} {shareCopied ? "Link copied" : "Copy share link"}</Button>
+                    <Button variant="secondary" onClick={downloadProjectBackup}><Download size={16} /> Project backup</Button>
                     <button onClick={() => { setStep(3); setRenderProgress(0); }} className={buttonClassName("ghost")}><Sparkles size={16} /> Create another version</button>
                   </div>
+                  {isEncoding ? <div className="mx-auto mt-5 h-2 max-w-xl overflow-hidden rounded-full bg-pine/10"><div className="h-full rounded-full bg-gold transition-all" style={{ width: `${encodeProgress}%` }} /></div> : null}
+                  {encodeError ? <p className="mt-4 text-sm font-semibold text-red-700">{encodeError}</p> : null}
                 </div>
               )}
             </div>
