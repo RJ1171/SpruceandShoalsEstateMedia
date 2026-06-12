@@ -63,7 +63,7 @@ export async function renderListingVideo(projectId: string, inputProps: ListingV
     codec: "h264",
     outputLocation,
     inputProps,
-    crf: 28,
+    videoBitrate: "2M",
     imageFormat: "jpeg",
     jpegQuality: 82,
     concurrency: 2,
@@ -81,12 +81,16 @@ export async function renderListingVideo(projectId: string, inputProps: ListingV
     upsert: true
   });
   await rm(outputLocation, { force: true });
-  if (error) throw error;
+  if (error) {
+    const megabytes = (video.byteLength / 1024 / 1024).toFixed(1);
+    throw new Error(`${error.message} (rendered file: ${megabytes} MB)`);
+  }
 
   return {
     videoPath,
     videoUrl: supabase.storage.from("listing-videos").getPublicUrl(videoPath).data.publicUrl,
     durationInFrames: composition.durationInFrames,
-    fps: composition.fps
+    fps: composition.fps,
+    sizeBytes: video.byteLength
   };
 }
