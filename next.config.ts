@@ -3,7 +3,10 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   serverExternalPackages: ["@remotion/renderer", "@remotion/bundler"],
   outputFileTracingIncludes: {
-    "/api/render": ["./remotion/**/*"]
+    "/api/render": [
+      "./remotion/**/*",
+      "./node_modules/@remotion/compositor-linux-x64-gnu/**/*"
+    ]
   },
   images: {
     remotePatterns: [
