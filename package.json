@@ -13,6 +13,8 @@
     "@hookform/resolvers": "latest",
     "@prisma/client": "latest",
     "@react-email/components": "latest",
+    "@remotion/bundler": "^4.0.420",
+    "@remotion/renderer": "^4.0.420",
     "@supabase/supabase-js": "latest",
     "class-variance-authority": "latest",
     "clsx": "latest",
@@ -23,6 +25,7 @@
     "react": "latest",
     "react-dom": "latest",
     "react-hook-form": "latest",
+    "remotion": "^4.0.420",
     "tailwind-merge": "latest",
     "zod": "latest"
   },
@@ -36,6 +39,6 @@
     "postcss": "latest",
     "prisma": "latest",
     "tailwindcss": "latest",
-    "typescript": "latest"
+    "typescript": "5.9.3"
   }
 }

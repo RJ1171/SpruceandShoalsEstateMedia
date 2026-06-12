@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  serverExternalPackages: ["@remotion/renderer", "@remotion/bundler"],
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "res.cloudinary.com" },
