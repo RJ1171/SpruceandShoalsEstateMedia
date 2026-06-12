@@ -6,8 +6,10 @@ export const brand = {
     "A polished estate media studio for listing videos, social content, editorial descriptions, and branded real estate marketing assets.",
   domain: "https://spruceandshoals.example",
   contact: {
-    email: "studio@spruceandshoals.example",
-    phone: "(978) 555-0148",
+    name: "Rocco Fiacchino",
+    email: "Roccofiacchino@gmail.com",
+    phone: "(603) 260-8166",
+    instagram: "Rocco_f6",
     region: "North Shore, Boston, Cape Ann, and coastal New England"
   },
   colors: {
@@ -31,7 +33,6 @@ export const brand = {
     { label: "Services", href: "#services" },
     { label: "Portfolio", href: "#portfolio" },
     { label: "Process", href: "#process" },
-    { label: "Testimonials", href: "#testimonials" },
     { label: "FAQ", href: "#faq" },
     { label: "Contact", href: "#contact" }
   ],

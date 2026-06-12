@@ -68,12 +68,6 @@ const features: IconCard[] = [
   ["Team-ready workflows", "Support agents, teams, brokerages, and media companies.", Share2]
 ];
 
-const testimonials = [
-  ["The final listing package looked like something from a national luxury brokerage.", "Mara Ellison", "Listing Advisor"],
-  ["It made our property marketing feel sharper, faster, and more consistent.", "Colin Reyes", "Team Lead"],
-  ["The brand templates saved us hours every week.", "Nina Caldwell", "Brokerage Marketing"]
-];
-
 const faqs = [
   ["What does Spruce & Shoals Estate Media create?", "The studio helps prepare property videos, listing descriptions, social captions, branded media packages, and presentation assets."],
   ["Is this for individual agents or teams?", "Yes. The experience is designed for solo agents, growing teams, brokerages, and real estate media partners."],
@@ -83,14 +77,16 @@ const faqs = [
   ["Can this support multiple listings?", "The project model is built around reusable listing packages and organization-level media libraries."]
 ];
 
-function ShowcaseCard({ title, label, tall = false }: { title: string; label: string; tall?: boolean }) {
+function ShowcaseCard({ title, label, image, description, tall = false }: { title: string; label: string; image: string; description: string; tall?: boolean }) {
   return (
-    <Card className={`corner-frame overflow-hidden p-3 ${tall ? "md:row-span-2" : ""}`}>
-      <div className={`${tall ? "h-96" : "h-48"} rounded-md border border-pine/15 bg-[linear-gradient(135deg,#0F2C25,#F7F3EA_58%,#C6A15B)]`} />
+    <Card className={`group corner-frame overflow-hidden p-3 ${tall ? "md:row-span-2" : ""}`}>
+      <div className={`${tall ? "h-[31rem]" : "h-64"} overflow-hidden rounded-md border border-pine/15 bg-pine`}>
+        <Image src={image} alt={title} width={1536} height={1024} className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.025]" />
+      </div>
       <div className="p-5">
         <p className="text-xs font-bold uppercase tracking-[0.18em] text-gold">{label}</p>
         <h3 className="mt-3 font-serif text-2xl font-semibold text-pine">{title}</h3>
-        <p className="mt-2 text-sm leading-6 text-charcoal/70">A refined placeholder for luxury property media, before/after visuals, and video preview states.</p>
+        <p className="mt-2 text-sm leading-6 text-charcoal/70">{description}</p>
       </div>
     </Card>
   );
@@ -193,13 +189,12 @@ export function LandingPage() {
       </section>
 
       <section id="portfolio" className="mx-auto max-w-7xl px-5 py-20">
-        <SectionHeading eyebrow="Portfolio" title="A showcase built like a luxury listing presentation" copy="Use the portfolio area for featured property media, before-and-after edits, and video preview cards." />
-        <div className="mt-12 grid gap-5 md:grid-cols-3">
-          <ShowcaseCard title="Coastal estate media package" label="Featured property" tall />
-          <ShowcaseCard title="Before and after gallery" label="Image polish" />
-          <ShowcaseCard title="Vertical reel preview" label="Social video" />
-          <ShowcaseCard title="Editorial listing story" label="Presentation asset" />
-          <ShowcaseCard title="Agent brand overlay" label="Brand system" />
+        <SectionHeading eyebrow="Portfolio" title="A showcase built like a luxury listing presentation" copy="Original coastal property imagery presented with the restraint, clarity, and polish of a high-end listing campaign." />
+        <div className="mt-12 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+          <ShowcaseCard title="Atlantic Shingle Estate" label="Featured residence" image="/images/portfolio/atlantic-shingle-estate.png" description="A cedar-shingled oceanfront retreat framed by native grasses and broad Atlantic views." tall />
+          <ShowcaseCard title="North Shore Modern" label="Architectural story" image="/images/portfolio/north-shore-modern.png" description="Modern coastal lines, weathered materials, and floor-to-ceiling views over a quiet rocky cove." />
+          <ShowcaseCard title="Maine at Blue Hour" label="Twilight campaign" image="/images/portfolio/maine-blue-hour.png" description="Warm interior light and cool coastal evening tones designed for a memorable launch moment." />
+          <ShowcaseCard title="Cape Cod Glass House" label="Lifestyle presentation" image="/images/portfolio/cape-cod-pool-house.png" description="A contemporary beach residence composed around glass, water, dunes, and soft coastal daylight." />
         </div>
       </section>
 
@@ -252,21 +247,6 @@ export function LandingPage() {
         </div>
       </section>
 
-      <section id="testimonials" className="section-frame py-20">
-        <div className="mx-auto max-w-7xl px-5">
-          <SectionHeading eyebrow="Testimonials" title="Presentation-quality work agents can feel confident sharing" />
-          <div className="mt-12 grid gap-5 md:grid-cols-3">
-            {testimonials.map(([quote, name, role]) => (
-              <Card key={name} className="border-l-4 border-l-gold p-6">
-                <p className="font-serif text-2xl leading-8 text-pine">"{quote}"</p>
-                <p className="mt-6 text-sm font-bold uppercase tracking-[0.16em] text-gold">{name}</p>
-                <p className="mt-1 text-sm text-charcoal/60">{role}</p>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
       <section id="faq" className="mx-auto max-w-4xl px-5 py-20">
         <SectionHeading eyebrow="FAQ" title="Straight answers before the first listing" />
         <div className="mt-10 divide-y divide-pine/15 rounded-lg border border-pine/20 bg-white px-5 shadow-sm">
@@ -293,7 +273,7 @@ export function LandingPage() {
       </section>
 
       <footer className="bg-forest px-5 py-12 text-offWhite">
-        <div className="mx-auto grid max-w-7xl gap-8 md:grid-cols-[1.2fr_0.8fr_0.8fr_0.8fr]">
+        <div className="mx-auto grid max-w-7xl gap-8 md:grid-cols-[1.4fr_0.8fr_1fr]">
           <div>
             <p className="font-serif text-3xl font-semibold">{brand.name}</p>
             <p className="mt-4 max-w-md text-sm leading-6 text-offWhite/65">{brand.description}</p>
@@ -303,12 +283,13 @@ export function LandingPage() {
             <div className="mt-4 space-y-2 text-sm text-offWhite/70"><p>Property videos</p><p>Social assets</p><p>Brand kits</p></div>
           </div>
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-gold">Company</p>
-            <div className="mt-4 space-y-2 text-sm text-offWhite/70"><p>Portfolio</p><p>Process</p><p>FAQ</p></div>
-          </div>
-          <div>
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-gold">Contact</p>
-            <div className="mt-4 space-y-2 text-sm text-offWhite/70"><p>{brand.contact.email}</p><p>{brand.contact.phone}</p><p>Instagram / LinkedIn</p></div>
+            <div className="mt-4 space-y-2 text-sm text-offWhite/70">
+              <p className="font-semibold text-offWhite">{brand.contact.name}</p>
+              <a className="block transition hover:text-gold" href="tel:+16032608166">{brand.contact.phone}</a>
+              <a className="block break-all transition hover:text-gold" href={`mailto:${brand.contact.email}`}>{brand.contact.email}</a>
+              <a className="block transition hover:text-gold" href="https://www.instagram.com/rocco_f6" target="_blank" rel="noreferrer">@{brand.contact.instagram}</a>
+            </div>
           </div>
         </div>
       </footer>
