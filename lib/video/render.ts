@@ -1,6 +1,6 @@
 import { bundle } from "@remotion/bundler";
-import { renderMedia, selectComposition } from "@remotion/renderer";
-import { readFile, rm } from "node:fs/promises";
+import { ensureBrowser, renderMedia, selectComposition } from "@remotion/renderer";
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import type { ListingVideoProps } from "../../remotion/ListingVideo";
@@ -9,25 +9,55 @@ import { ensurePublicBucket } from "../supabase-server";
 declare global {
   // eslint-disable-next-line no-var
   var spruceShoalsRemotionBundle: Promise<string> | undefined;
+  // eslint-disable-next-line no-var
+  var spruceShoalsBrowserExecutable: Promise<string> | undefined;
 }
+
+const projectRoot = process.cwd();
 
 function getBundle() {
   if (!globalThis.spruceShoalsRemotionBundle) {
     globalThis.spruceShoalsRemotionBundle = bundle({
-      entryPoint: path.join(process.cwd(), "remotion", "index.ts"),
-      webpackOverride: (configuration) => configuration
+      entryPoint: path.join(projectRoot, "remotion", "index.ts"),
+      webpackOverride: (configuration) => ({ ...configuration, cache: false })
     });
   }
 
   return globalThis.spruceShoalsRemotionBundle;
 }
 
+function getBrowserExecutable() {
+  if (!globalThis.spruceShoalsBrowserExecutable) {
+    globalThis.spruceShoalsBrowserExecutable = (async () => {
+      const browserRoot = path.join(tmpdir(), "spruce-shoals-remotion");
+      await mkdir(browserRoot, { recursive: true });
+      await writeFile(path.join(browserRoot, "package.json"), "{}");
+
+      const previousDirectory = process.cwd();
+      try {
+        process.chdir(browserRoot);
+        const browser = await ensureBrowser({ chromeMode: "headless-shell", logLevel: "warn" });
+        if (browser.type === "no-browser" || browser.type === "version-mismatch") {
+          throw new Error("Chrome Headless Shell could not be prepared for rendering.");
+        }
+        return browser.path;
+      } finally {
+        process.chdir(previousDirectory);
+      }
+    })();
+  }
+
+  return globalThis.spruceShoalsBrowserExecutable;
+}
+
 export async function renderListingVideo(projectId: string, inputProps: ListingVideoProps) {
   const serveUrl = await getBundle();
+  const browserExecutable = await getBrowserExecutable();
   const composition = await selectComposition({
     serveUrl,
     id: "ListingVideo",
-    inputProps
+    inputProps,
+    browserExecutable
   });
   const outputLocation = path.join(tmpdir(), `${projectId}.mp4`);
 
@@ -42,7 +72,8 @@ export async function renderListingVideo(projectId: string, inputProps: ListingV
     jpegQuality: 90,
     concurrency: 1,
     timeoutInMilliseconds: 120000,
-    overwrite: true
+    overwrite: true,
+    browserExecutable
   });
 
   const video = await readFile(outputLocation);
