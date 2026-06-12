@@ -108,7 +108,7 @@ export function LandingPage() {
             {brand.navigation.map((item) => (
               <a key={item.href} href={item.href} className="transition hover:text-gold">{item.label}</a>
             ))}
-            <Link href="/dashboard" className={buttonClassName("gold")}>{brand.ctas.primary}</Link>
+            <Link href="/create" className={buttonClassName("gold")}>{brand.ctas.primary}</Link>
           </div>
           <details className="relative md:hidden">
             <summary className="flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-md border border-gold/40 text-gold">
@@ -118,7 +118,7 @@ export function LandingPage() {
               {brand.navigation.map((item) => (
                 <a key={item.href} href={item.href} className="block rounded-md px-3 py-2 text-sm text-offWhite/80 hover:bg-pine hover:text-gold">{item.label}</a>
               ))}
-              <Link href="/dashboard" className={buttonClassName("gold", "mt-3 w-full")}>{brand.ctas.primary}</Link>
+              <Link href="/create" className={buttonClassName("gold", "mt-3 w-full")}>{brand.ctas.primary}</Link>
             </div>
           </details>
         </div>
@@ -137,7 +137,7 @@ export function LandingPage() {
             Spruce & Shoals Estate Media helps agents, teams, and brokerages turn listing photos into polished video, social content, and elevated marketing assets built for today's market.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <Link href="/dashboard/studio" className={buttonClassName("primary", "w-full sm:w-auto")}>{brand.ctas.heroPrimary} <ArrowRight size={16} /></Link>
+            <Link href="/create" className={buttonClassName("primary", "w-full sm:w-auto")}>{brand.ctas.heroPrimary} <ArrowRight size={16} /></Link>
             <a href="#portfolio" className={buttonClassName("secondary", "w-full sm:w-auto")}><Play size={16} /> {brand.ctas.heroSecondary}</a>
           </div>
         </div>
@@ -268,7 +268,7 @@ export function LandingPage() {
           <h2 className="mx-auto mt-4 font-serif text-4xl font-semibold md:text-6xl">Bring a More Refined Standard to Your Listing Media</h2>
           <div className="gold-rule mx-auto my-7 max-w-md" />
           <p className="mx-auto max-w-2xl text-base leading-8 text-offWhite/75">Create polished property videos, branded assets, and social-ready content from one streamlined studio.</p>
-          <Link href="/dashboard/studio" className={buttonClassName("gold", "mt-8")}>{brand.ctas.final} <ArrowRight size={16} /></Link>
+          <Link href="/create" className={buttonClassName("gold", "mt-8")}>{brand.ctas.final} <ArrowRight size={16} /></Link>
         </div>
       </section>
 
