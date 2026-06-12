@@ -63,11 +63,11 @@ export async function renderListingVideo(projectId: string, inputProps: ListingV
     codec: "h264",
     outputLocation,
     inputProps,
-    crf: 20,
+    crf: 28,
     imageFormat: "jpeg",
-    jpegQuality: 90,
-    concurrency: 1,
-    timeoutInMilliseconds: 120000,
+    jpegQuality: 82,
+    concurrency: 2,
+    timeoutInMilliseconds: 240000,
     overwrite: true,
     browserExecutable
   });

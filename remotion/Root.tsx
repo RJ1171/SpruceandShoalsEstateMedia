@@ -20,13 +20,13 @@ export const RemotionRoot = () => (
   <Composition
     id="ListingVideo"
     component={ListingVideo}
-    fps={30}
-    width={1080}
-    height={1920}
-    durationInFrames={75}
+    fps={24}
+    width={720}
+    height={1280}
+    durationInFrames={60}
     defaultProps={defaultProps}
     calculateMetadata={({ props }) => ({
-      durationInFrames: 75 + Math.max(0, props.images.length - 1) * 60
+      durationInFrames: 60 + Math.max(0, props.images.length - 1) * 48
     })}
   />
 );
