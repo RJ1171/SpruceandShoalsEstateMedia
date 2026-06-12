@@ -9,3 +9,5 @@ outputs
 work
 *.tsbuildinfo
 prisma/dev.db
+
+.vercel
