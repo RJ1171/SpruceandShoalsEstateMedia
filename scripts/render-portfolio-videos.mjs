@@ -19,10 +19,16 @@ const listings = [
   ["maine-blue-hour", "Maine at Blue Hour", "Twilight campaign"],
   ["cape-cod-pool-house", "Cape Cod Glass House", "Lifestyle presentation"]
 ];
+const requestedSlug = process.argv[2];
 
 for (const [slug, title, label] of listings) {
+  if (requestedSlug && requestedSlug !== slug) continue;
   const inputProps = {
-    image: `/images/portfolio/${slug}.png`,
+    scenes: [
+      { image: `/images/portfolio/${slug}.png`, room: "Exterior" },
+      { image: `/images/portfolio/interiors/${slug}-living-room.png`, room: "Living room" },
+      { image: `/images/portfolio/interiors/${slug}-kitchen.png`, room: "Kitchen" }
+    ],
     title,
     label
   };

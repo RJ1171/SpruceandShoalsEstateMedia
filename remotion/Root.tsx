@@ -18,7 +18,11 @@ const defaultProps: ListingVideoProps = {
 };
 
 const portfolioDefaultProps: PortfolioVideoProps = {
-  image: "/images/portfolio/atlantic-shingle-estate.png",
+  scenes: [
+    { image: "/images/portfolio/atlantic-shingle-estate.png", room: "Exterior" },
+    { image: "/images/portfolio/interiors/atlantic-shingle-estate-living-room.png", room: "Living room" },
+    { image: "/images/portfolio/interiors/atlantic-shingle-estate-kitchen.png", room: "Kitchen" }
+  ],
   title: "Atlantic Shingle Estate",
   label: "Featured residence"
 };
@@ -43,7 +47,7 @@ export const RemotionRoot = () => (
       fps={24}
       width={1280}
       height={720}
-      durationInFrames={288}
+      durationInFrames={432}
       defaultProps={portfolioDefaultProps}
     />
     <Composition
@@ -52,7 +56,7 @@ export const RemotionRoot = () => (
       fps={24}
       width={720}
       height={1280}
-      durationInFrames={288}
+      durationInFrames={432}
       defaultProps={portfolioDefaultProps}
     />
   </>

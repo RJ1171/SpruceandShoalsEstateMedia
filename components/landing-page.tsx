@@ -96,7 +96,7 @@ function ShowcaseCard({ title, label, image, video, description, tall = false }:
         <p className="text-xs font-bold uppercase tracking-[0.18em] text-gold">{label}</p>
         <h3 className="mt-3 font-serif text-2xl font-semibold text-pine">{title}</h3>
         <p className="mt-2 text-sm leading-6 text-charcoal/70">{description}</p>
-        <p className="mt-4 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.15em] text-pine/55"><Play size={14} className="text-gold" /> 12-second generated preview</p>
+        <p className="mt-4 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.15em] text-pine/55"><Play size={14} className="text-gold" /> 18-second generated property tour</p>
       </div>
     </Card>
   );
