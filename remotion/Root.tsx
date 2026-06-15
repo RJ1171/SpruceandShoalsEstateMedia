@@ -1,5 +1,6 @@
 import { Composition } from "remotion";
 import { ListingVideo, type ListingVideoProps } from "./ListingVideo";
+import { PortfolioVideo, type PortfolioVideoProps } from "./PortfolioVideo";
 
 const defaultProps: ListingVideoProps = {
   images: [
@@ -16,17 +17,43 @@ const defaultProps: ListingVideoProps = {
   agentName: "Rocco Fiacchino"
 };
 
+const portfolioDefaultProps: PortfolioVideoProps = {
+  image: "/images/portfolio/atlantic-shingle-estate.png",
+  title: "Atlantic Shingle Estate",
+  label: "Featured residence"
+};
+
 export const RemotionRoot = () => (
-  <Composition
-    id="ListingVideo"
-    component={ListingVideo}
-    fps={24}
-    width={720}
-    height={1280}
-    durationInFrames={60}
-    defaultProps={defaultProps}
-    calculateMetadata={({ props }) => ({
-      durationInFrames: 60 + Math.max(0, props.images.length - 1) * 48
-    })}
-  />
+  <>
+    <Composition
+      id="ListingVideo"
+      component={ListingVideo}
+      fps={24}
+      width={720}
+      height={1280}
+      durationInFrames={60}
+      defaultProps={defaultProps}
+      calculateMetadata={({ props }) => ({
+        durationInFrames: 60 + Math.max(0, props.images.length - 1) * 48
+      })}
+    />
+    <Composition
+      id="PortfolioVideo"
+      component={PortfolioVideo}
+      fps={24}
+      width={1280}
+      height={720}
+      durationInFrames={288}
+      defaultProps={portfolioDefaultProps}
+    />
+    <Composition
+      id="PortfolioVideoVertical"
+      component={PortfolioVideo}
+      fps={24}
+      width={720}
+      height={1280}
+      durationInFrames={288}
+      defaultProps={portfolioDefaultProps}
+    />
+  </>
 );
