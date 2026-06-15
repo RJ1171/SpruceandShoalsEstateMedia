@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, DragEvent, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, DragEvent, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowRight,
   BadgeCheck,
@@ -8,6 +8,7 @@ import {
   GripVertical,
   ImagePlus,
   Loader2,
+  MapPin,
   Play,
   Sparkles,
   UploadCloud,
@@ -35,6 +36,16 @@ type RenderResult = {
   fps: number;
 };
 
+type PropertyLookup = {
+  address: string;
+  price: number | null;
+  priceType: "list" | "last-sale" | null;
+  bedrooms: number | null;
+  bathrooms: number | null;
+  squareFeet: number | null;
+  error?: string;
+};
+
 const MIN_PHOTOS = 5;
 const MAX_PHOTOS = 30;
 
@@ -50,11 +61,59 @@ export default function Home() {
   const [status, setStatus] = useState<"idle" | "uploading" | "rendering" | "complete" | "error">("idle");
   const [message, setMessage] = useState("");
   const [result, setResult] = useState<RenderResult | null>(null);
+  const [lookupStatus, setLookupStatus] = useState<"idle" | "loading" | "found" | "not-found">("idle");
+  const [lookupMessage, setLookupMessage] = useState("");
+  const lastLookupAddress = useRef("");
 
   const estimatedSeconds = useMemo(() => photos.length * 2.5 - Math.max(0, photos.length - 1) * 0.5, [photos.length]);
   const canRender = photos.length >= MIN_PHOTOS && photos.length <= MAX_PHOTOS && address.trim() && price.trim() && beds.trim() && baths.trim() && squareFeet.trim() && agentName.trim();
 
   useEffect(() => () => photos.forEach((photo) => URL.revokeObjectURL(photo.previewUrl)), [photos]);
+
+  useEffect(() => {
+    const query = address.trim();
+    if (query.length < 8) {
+      lastLookupAddress.current = "";
+      setLookupStatus("idle");
+      setLookupMessage("");
+      return;
+    }
+    if (query === lastLookupAddress.current) return;
+
+    const controller = new AbortController();
+    const timer = window.setTimeout(async () => {
+      lastLookupAddress.current = query;
+      setLookupStatus("loading");
+      setLookupMessage("Looking up property details...");
+
+      try {
+        const response = await fetch(`/api/properties/lookup?address=${encodeURIComponent(query)}`, {
+          signal: controller.signal
+        });
+        const property = await response.json() as PropertyLookup;
+        if (!response.ok) throw new Error(property.error || "Property not found.");
+
+        const normalizedAddress = property.address || query;
+        lastLookupAddress.current = normalizedAddress;
+        setAddress(normalizedAddress);
+        if (property.price) setPrice(new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(property.price));
+        if (property.bedrooms !== null) setBeds(String(property.bedrooms));
+        if (property.bathrooms !== null) setBaths(String(property.bathrooms));
+        if (property.squareFeet !== null) setSquareFeet(new Intl.NumberFormat("en-US").format(property.squareFeet));
+        setLookupStatus("found");
+        setLookupMessage(property.priceType === "last-sale" ? "Property details found. Price uses the last recorded sale and can be edited." : "Property details filled automatically.");
+      } catch (error) {
+        if (controller.signal.aborted) return;
+        setLookupStatus("not-found");
+        setLookupMessage(error instanceof Error ? error.message : "Property lookup failed.");
+      }
+    }, 900);
+
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [address]);
 
   function addPhotos(event: ChangeEvent<HTMLInputElement>) {
     const available = MAX_PHOTOS - photos.length;
@@ -253,6 +312,12 @@ export default function Home() {
                 </label>
               ))}
             </div>
+            {lookupStatus !== "idle" ? (
+              <div className={`mt-4 flex items-center gap-2 rounded-md border px-3 py-2 text-sm ${lookupStatus === "not-found" ? "border-red-200 bg-red-50 text-red-700" : "border-gold/30 bg-cream text-pine"}`}>
+                {lookupStatus === "loading" ? <Loader2 size={16} className="shrink-0 animate-spin text-gold" /> : <MapPin size={16} className="shrink-0 text-gold" />}
+                <span>{lookupMessage}</span>
+              </div>
+            ) : null}
           </section>
         </div>
 
