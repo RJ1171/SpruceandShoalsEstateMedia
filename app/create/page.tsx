@@ -1,14 +1,14 @@
 "use client";
 
-import { ChangeEvent, DragEvent, useEffect, useMemo, useRef, useState } from "react";
+import { ChangeEvent, DragEvent, useEffect, useMemo, useState } from "react";
 import {
   ArrowRight,
   BadgeCheck,
   Download,
   GripVertical,
   ImagePlus,
+  Link2,
   Loader2,
-  MapPin,
   Play,
   Sparkles,
   UploadCloud,
@@ -36,14 +36,13 @@ type RenderResult = {
   fps: number;
 };
 
-type PropertyLookup = {
-  address: string;
+type ImportedProperty = {
+  address: string | null;
   price: number | null;
-  priceType: "list" | "last-sale" | null;
   bedrooms: number | null;
   bathrooms: number | null;
   squareFeet: number | null;
-  error?: string;
+  description: string | null;
 };
 
 const MIN_PHOTOS = 5;
@@ -58,62 +57,58 @@ export default function Home() {
   const [baths, setBaths] = useState("");
   const [squareFeet, setSquareFeet] = useState("");
   const [agentName, setAgentName] = useState("Rocco Fiacchino");
+  const [listingUrl, setListingUrl] = useState("");
+  const [importStatus, setImportStatus] = useState<"idle" | "loading" | "error">("idle");
+  const [importMessage, setImportMessage] = useState("");
   const [status, setStatus] = useState<"idle" | "uploading" | "rendering" | "complete" | "error">("idle");
   const [message, setMessage] = useState("");
   const [result, setResult] = useState<RenderResult | null>(null);
-  const [lookupStatus, setLookupStatus] = useState<"idle" | "loading" | "found" | "not-found">("idle");
-  const [lookupMessage, setLookupMessage] = useState("");
-  const lastLookupAddress = useRef("");
 
   const estimatedSeconds = useMemo(() => photos.length * 2.5 - Math.max(0, photos.length - 1) * 0.5, [photos.length]);
   const canRender = photos.length >= MIN_PHOTOS && photos.length <= MAX_PHOTOS && address.trim() && price.trim() && beds.trim() && baths.trim() && squareFeet.trim() && agentName.trim();
 
   useEffect(() => () => photos.forEach((photo) => URL.revokeObjectURL(photo.previewUrl)), [photos]);
 
-  useEffect(() => {
-    const query = address.trim();
-    if (query.length < 8) {
-      lastLookupAddress.current = "";
-      setLookupStatus("idle");
-      setLookupMessage("");
-      return;
+  async function importListing() {
+    if (!listingUrl.trim()) return;
+    setImportStatus("loading");
+    setImportMessage("Reading public listing details and photos...");
+
+    try {
+      const response = await fetch("/api/listings/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: listingUrl.trim() })
+      });
+      const payload = await response.json() as { property?: ImportedProperty; images?: string[]; error?: string };
+      if (!response.ok) throw new Error(payload.error || "Listing import failed.");
+
+      const property = payload.property;
+      if (property?.address) setAddress(property.address);
+      if (property?.price) setPrice(new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(property.price));
+      if (property?.bedrooms !== null && property?.bedrooms !== undefined) setBeds(String(property.bedrooms));
+      if (property?.bathrooms !== null && property?.bathrooms !== undefined) setBaths(String(property.bathrooms));
+      if (property?.squareFeet) setSquareFeet(new Intl.NumberFormat("en-US").format(property.squareFeet));
+
+      const available = MAX_PHOTOS - photos.length;
+      const imported = await Promise.all((payload.images ?? []).slice(0, available).map(async (src, index) => {
+        const imageResponse = await fetch(src);
+        if (!imageResponse.ok) return null;
+        const blob = await imageResponse.blob();
+        const extension = blob.type.split("/")[1] || "jpg";
+        const file = new File([blob], `listing-photo-${index + 1}.${extension}`, { type: blob.type || "image/jpeg" });
+        return { id: crypto.randomUUID(), file, previewUrl: URL.createObjectURL(file) } satisfies LocalPhoto;
+      }));
+      const validPhotos = imported.filter((photo): photo is LocalPhoto => photo !== null);
+      if (validPhotos.length) setPhotos((current) => [...current, ...validPhotos]);
+
+      setImportStatus("idle");
+      setImportMessage(`Listing details filled${validPhotos.length ? ` and ${validPhotos.length} photos added` : ""}. Review any fields before rendering.`);
+    } catch (error) {
+      setImportStatus("error");
+      setImportMessage(error instanceof Error ? error.message : "Listing import failed.");
     }
-    if (query === lastLookupAddress.current) return;
-
-    const controller = new AbortController();
-    const timer = window.setTimeout(async () => {
-      lastLookupAddress.current = query;
-      setLookupStatus("loading");
-      setLookupMessage("Looking up property details...");
-
-      try {
-        const response = await fetch(`/api/properties/lookup?address=${encodeURIComponent(query)}`, {
-          signal: controller.signal
-        });
-        const property = await response.json() as PropertyLookup;
-        if (!response.ok) throw new Error(property.error || "Property not found.");
-
-        const normalizedAddress = property.address || query;
-        lastLookupAddress.current = normalizedAddress;
-        setAddress(normalizedAddress);
-        if (property.price) setPrice(new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(property.price));
-        if (property.bedrooms !== null) setBeds(String(property.bedrooms));
-        if (property.bathrooms !== null) setBaths(String(property.bathrooms));
-        if (property.squareFeet !== null) setSquareFeet(new Intl.NumberFormat("en-US").format(property.squareFeet));
-        setLookupStatus("found");
-        setLookupMessage(property.priceType === "last-sale" ? "Property details found. Price uses the last recorded sale and can be edited." : "Property details filled automatically.");
-      } catch (error) {
-        if (controller.signal.aborted) return;
-        setLookupStatus("not-found");
-        setLookupMessage(error instanceof Error ? error.message : "Property lookup failed.");
-      }
-    }, 900);
-
-    return () => {
-      window.clearTimeout(timer);
-      controller.abort();
-    };
-  }, [address]);
+  }
 
   function addPhotos(event: ChangeEvent<HTMLInputElement>) {
     const available = MAX_PHOTOS - photos.length;
@@ -292,6 +287,31 @@ export default function Home() {
           <section className="rounded-lg border border-pine/15 bg-white p-5 shadow-sm sm:p-7">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-gold">02 · Listing details</p>
             <h2 className="mt-2 font-serif text-3xl font-semibold text-pine">Build the on-screen presentation</h2>
+            <div className="mt-6 rounded-md border border-gold/35 bg-cream p-4">
+              <label className="text-sm font-semibold text-pine" htmlFor="listing-url">Import a public listing</label>
+              <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+                <div className="relative flex-1">
+                  <Link2 size={17} className="absolute left-3 top-1/2 -translate-y-1/2 text-gold" />
+                  <input
+                    id="listing-url"
+                    value={listingUrl}
+                    onChange={(event) => setListingUrl(event.target.value)}
+                    placeholder="Paste a Zillow, Realtor.com, or Redfin URL"
+                    className="h-12 w-full rounded-md border border-pine/20 bg-white pl-10 pr-3 text-sm outline-none transition focus:border-gold"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={importListing}
+                  disabled={!listingUrl.trim() || importStatus === "loading"}
+                  className="inline-flex h-12 items-center justify-center gap-2 rounded-md bg-pine px-5 text-sm font-bold text-white transition hover:bg-forest disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {importStatus === "loading" ? <Loader2 size={17} className="animate-spin" /> : <Sparkles size={17} />}
+                  Auto-fill
+                </button>
+              </div>
+              {importMessage ? <p className={`mt-2 text-sm ${importStatus === "error" ? "text-red-700" : "text-charcoal/60"}`}>{importMessage}</p> : null}
+            </div>
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
               {[
                 ["Property address", address, setAddress, "44 Railroad Ave #6, Salisbury, MA"],
@@ -312,12 +332,6 @@ export default function Home() {
                 </label>
               ))}
             </div>
-            {lookupStatus !== "idle" ? (
-              <div className={`mt-4 flex items-center gap-2 rounded-md border px-3 py-2 text-sm ${lookupStatus === "not-found" ? "border-red-200 bg-red-50 text-red-700" : "border-gold/30 bg-cream text-pine"}`}>
-                {lookupStatus === "loading" ? <Loader2 size={16} className="shrink-0 animate-spin text-gold" /> : <MapPin size={16} className="shrink-0 text-gold" />}
-                <span>{lookupMessage}</span>
-              </div>
-            ) : null}
           </section>
         </div>
 

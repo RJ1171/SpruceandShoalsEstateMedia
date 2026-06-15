@@ -59,6 +59,15 @@ type ProjectDetails = {
   description: string;
 };
 
+type ImportedProperty = {
+  address: string | null;
+  price: number | null;
+  bedrooms: number | null;
+  bathrooms: number | null;
+  squareFeet: number | null;
+  description: string | null;
+};
+
 const steps = [
   [1, "Project"],
   [2, "Photos"],
@@ -208,12 +217,25 @@ export function VideoCreationWorkflow() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: listingUrl })
       });
-      const payload = (await response.json()) as { images?: string[]; error?: string };
-      if (!response.ok || !payload.images?.length) throw new Error(payload.error || "No listing images found.");
+      const payload = (await response.json()) as { property?: ImportedProperty; images?: string[]; error?: string };
+      if (!response.ok) throw new Error(payload.error || "No public listing information found.");
+
+      const property = payload.property;
+      if (property) {
+        setDetails((current) => ({
+          ...current,
+          address: property.address || current.address,
+          price: property.price ? String(property.price) : current.price,
+          bedrooms: property.bedrooms !== null ? String(property.bedrooms) : current.bedrooms,
+          bathrooms: property.bathrooms !== null ? String(property.bathrooms) : current.bathrooms,
+          squareFeet: property.squareFeet !== null ? String(property.squareFeet) : current.squareFeet,
+          description: property.description || current.description
+        }));
+      }
 
       setScenes((current) => [
         ...current,
-        ...payload.images!.map((src, index) => ({
+        ...(payload.images ?? []).map((src, index) => ({
           id: crypto.randomUUID(),
           name: `Listing photo ${index + 1}`,
           src,
@@ -225,7 +247,7 @@ export function VideoCreationWorkflow() {
         }))
       ]);
       setImportStatus("idle");
-      setImportMessage(`${payload.images.length} listing photos imported.`);
+      setImportMessage(`Listing details filled${payload.images?.length ? ` and ${payload.images.length} photos imported` : ""}.`);
     } catch (error) {
       setImportStatus("error");
       setImportMessage(error instanceof Error ? error.message : "Import failed.");
