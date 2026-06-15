@@ -25,6 +25,11 @@ type RentCastListing = RentCastProperty & {
   status?: string;
 };
 
+type RentCastError = {
+  error?: string;
+  message?: string;
+};
+
 async function rentCastGet<T>(path: string, address: string, apiKey: string) {
   const url = new URL(`https://api.rentcast.io/v1/${path}`);
   url.searchParams.set("address", address);
@@ -37,7 +42,13 @@ async function rentCastGet<T>(path: string, address: string, apiKey: string) {
   });
 
   if (response.status === 404) return [] as T[];
-  if (!response.ok) throw new Error(`Property service returned ${response.status}.`);
+  if (!response.ok) {
+    const details = await response.json().catch(() => null) as RentCastError | null;
+    if (details?.error === "billing/subscription-inactive") {
+      throw new Error("Property lookup subscription is inactive. Activate the RentCast API plan, then try again.");
+    }
+    throw new Error(details?.message || `Property service returned ${response.status}.`);
+  }
   return response.json() as Promise<T[]>;
 }
 
