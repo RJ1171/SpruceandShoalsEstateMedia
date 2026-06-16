@@ -34,6 +34,8 @@ type RenderResult = {
   videoUrl: string;
   durationInFrames: number;
   fps: number;
+  estimatedCostLabel?: string;
+  estimatedRenderSeconds?: number;
 };
 
 type ImportedProperty = {
@@ -395,6 +397,11 @@ export default function Home() {
           {result ? (
             <section className="rounded-lg border border-gold/40 bg-white p-5 shadow-sm">
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-gold">Render complete</p>
+              {result.estimatedCostLabel ? (
+                <p className="mt-2 text-xs font-semibold uppercase tracking-[0.12em] text-charcoal/45">
+                  Estimated platform cost {result.estimatedCostLabel} · {result.estimatedRenderSeconds ?? Math.round(result.durationInFrames / result.fps)}s reel
+                </p>
+              ) : null}
               <video className="mt-4 aspect-[9/16] max-h-[560px] w-full rounded-md bg-black object-contain" src={result.videoUrl} controls playsInline />
               <a href={result.videoUrl} download className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-md bg-gold px-5 text-sm font-semibold text-forest transition hover:bg-[#d4b36f]"><Download size={17} /> Download MP4</a>
             </section>
