@@ -126,6 +126,7 @@ export function VideoCreationWorkflow() {
   });
   const [source, setSource] = useState<"url" | "device" | "dropbox">("url");
   const [listingUrl, setListingUrl] = useState("");
+  const [listingText, setListingText] = useState("");
   const [scenes, setScenes] = useState<Scene[]>([]);
   const [importStatus, setImportStatus] = useState<"idle" | "loading" | "error">("idle");
   const [importMessage, setImportMessage] = useState("");
@@ -215,9 +216,9 @@ export function VideoCreationWorkflow() {
       const response = await fetch("/api/listings/import", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: listingUrl })
+        body: JSON.stringify({ url: listingUrl, pageText: listingText.trim() || undefined })
       });
-      const payload = (await response.json()) as { property?: ImportedProperty; images?: string[]; error?: string };
+      const payload = (await response.json()) as { property?: ImportedProperty; images?: string[]; warning?: string | null; error?: string };
       if (!response.ok) throw new Error(payload.error || "No public listing information found.");
 
       const property = payload.property;
@@ -247,7 +248,7 @@ export function VideoCreationWorkflow() {
         }))
       ]);
       setImportStatus("idle");
-      setImportMessage(`Listing details filled${payload.images?.length ? ` and ${payload.images.length} photos imported` : ""}.`);
+      setImportMessage(`${payload.warning ? `${payload.warning} ` : ""}Listing details filled${payload.images?.length ? ` and ${payload.images.length} photos imported` : ""}.`);
     } catch (error) {
       setImportStatus("error");
       setImportMessage(error instanceof Error ? error.message : "Import failed.");
@@ -600,8 +601,14 @@ export function VideoCreationWorkflow() {
                     <div>
                       <Link2 className="text-gold" size={26} />
                       <h3 className="mt-4 font-serif text-2xl font-semibold text-pine">Import a public listing</h3>
-                      <p className="mt-2 text-sm leading-6 text-charcoal/60">Paste a Zillow or Realtor.com property URL. We collect public image metadata and create scene cards.</p>
+                      <p className="mt-2 text-sm leading-6 text-charcoal/60">Paste a Zillow, Realtor.com, or Redfin URL. If the site blocks import, paste copied listing facts below.</p>
                       <input value={listingUrl} onChange={(event) => setListingUrl(event.target.value)} placeholder="https://www.realtor.com/realestateandhomes-detail/..." className="mt-5 h-12 w-full rounded-md border border-pine/20 bg-white px-3 text-sm outline-none focus:border-gold" />
+                      <textarea
+                        value={listingText}
+                        onChange={(event) => setListingText(event.target.value)}
+                        placeholder="Optional fallback: paste listing facts, description, price, beds, baths, and square feet."
+                        className="mt-3 min-h-28 w-full rounded-md border border-pine/20 bg-white p-3 text-sm leading-6 outline-none focus:border-gold"
+                      />
                       <Button className="mt-3 w-full" onClick={importListing} disabled={!listingUrl.trim() || importStatus === "loading"}>
                         {importStatus === "loading" ? <Loader2 className="animate-spin" size={16} /> : <WandSparkles size={16} />} Import listing photos
                       </Button>

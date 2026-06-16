@@ -58,6 +58,7 @@ export default function Home() {
   const [squareFeet, setSquareFeet] = useState("");
   const [agentName, setAgentName] = useState("Rocco Fiacchino");
   const [listingUrl, setListingUrl] = useState("");
+  const [listingText, setListingText] = useState("");
   const [importStatus, setImportStatus] = useState<"idle" | "loading" | "error">("idle");
   const [importMessage, setImportMessage] = useState("");
   const [status, setStatus] = useState<"idle" | "uploading" | "rendering" | "complete" | "error">("idle");
@@ -78,9 +79,9 @@ export default function Home() {
       const response = await fetch("/api/listings/import", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: listingUrl.trim() })
+        body: JSON.stringify({ url: listingUrl.trim(), pageText: listingText.trim() || undefined })
       });
-      const payload = await response.json() as { property?: ImportedProperty; images?: string[]; error?: string };
+      const payload = await response.json() as { property?: ImportedProperty; images?: string[]; warning?: string | null; error?: string };
       if (!response.ok) throw new Error(payload.error || "Listing import failed.");
 
       const property = payload.property;
@@ -103,7 +104,7 @@ export default function Home() {
       if (validPhotos.length) setPhotos((current) => [...current, ...validPhotos]);
 
       setImportStatus("idle");
-      setImportMessage(`Listing details filled${validPhotos.length ? ` and ${validPhotos.length} photos added` : ""}. Review any fields before rendering.`);
+      setImportMessage(`${payload.warning ? `${payload.warning} ` : ""}Listing details filled${validPhotos.length ? ` and ${validPhotos.length} photos added` : ""}. Review any fields before rendering.`);
     } catch (error) {
       setImportStatus("error");
       setImportMessage(error instanceof Error ? error.message : "Listing import failed.");
@@ -310,6 +311,12 @@ export default function Home() {
                   Auto-fill
                 </button>
               </div>
+              <textarea
+                value={listingText}
+                onChange={(event) => setListingText(event.target.value)}
+                placeholder="Optional fallback: paste copied listing facts here when a listing site blocks import. Include price, beds, baths, square feet, and description."
+                className="mt-3 min-h-24 w-full rounded-md border border-pine/20 bg-white p-3 text-sm leading-6 outline-none transition focus:border-gold"
+              />
               {importMessage ? <p className={`mt-2 text-sm ${importStatus === "error" ? "text-red-700" : "text-charcoal/60"}`}>{importMessage}</p> : null}
             </div>
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
