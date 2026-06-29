@@ -117,11 +117,15 @@ export default function Home() {
       const validPhotos = imported.filter((photo): photo is LocalPhoto => photo !== null);
       if (validPhotos.length) setPhotos((current) => [...current, ...validPhotos]);
 
-      setImportStatus(missing.length ? "error" : "idle");
-      setImportMessage(missing.length
-        ? `${payload.warning ? `${payload.warning} ` : ""}Still missing ${missing.join(", ")}. Paste the visible listing facts into the fallback box, then click Auto-fill again.`
-        : `${payload.warning ? `${payload.warning} ` : ""}Listing details filled${validPhotos.length ? ` and ${validPhotos.length} photos added` : ""}. Review any fields before rendering.`
-      );
+      const blockedWithoutFallback = Boolean(payload.warning && !listingText.trim());
+      setImportStatus(missing.length || blockedWithoutFallback ? "error" : "idle");
+      if (blockedWithoutFallback) {
+        setImportMessage("Address filled from the listing URL. The listing site blocked price, beds, baths, square feet, and photos, so paste the visible listing facts into the fallback box or enter the remaining fields manually.");
+      } else if (missing.length) {
+        setImportMessage(`${payload.warning ? `${payload.warning} ` : ""}Still missing ${missing.join(", ")}. Paste the visible listing facts into the fallback box, then click Auto-fill again.`);
+      } else {
+        setImportMessage(`Listing details filled${validPhotos.length ? ` and ${validPhotos.length} photos added` : ""}. Review any fields before rendering.`);
+      }
     } catch (error) {
       setImportStatus("error");
       setImportMessage(error instanceof Error ? error.message : "Listing import failed.");

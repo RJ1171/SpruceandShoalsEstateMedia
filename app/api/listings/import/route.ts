@@ -320,7 +320,7 @@ export async function POST(request: Request) {
       warning: blocked
         ? pageText
           ? "The listing site blocked direct media import, so pasted listing facts were used for the fields."
-          : "The listing site blocked direct media import. The address was read from the URL, but price, beds, baths, square feet, and photos may need pasted listing facts or manual entry."
+          : "The listing site blocked direct media import."
         : null,
       property,
       images: images.map((image) => `/api/listings/image?url=${encodeURIComponent(image)}`)

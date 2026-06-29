@@ -259,11 +259,15 @@ export function VideoCreationWorkflow() {
           focusY: 50
         }))
       ]);
-      setImportStatus(missing.length ? "error" : "idle");
-      setImportMessage(missing.length
-        ? `${payload.warning ? `${payload.warning} ` : ""}Still missing ${missing.join(", ")}. Paste visible listing facts into the fallback box, then import again.`
-        : `${payload.warning ? `${payload.warning} ` : ""}Listing details filled${payload.images?.length ? ` and ${payload.images.length} photos imported` : ""}.`
-      );
+      const blockedWithoutFallback = Boolean(payload.warning && !listingText.trim());
+      setImportStatus(missing.length || blockedWithoutFallback ? "error" : "idle");
+      if (blockedWithoutFallback) {
+        setImportMessage("Address filled from the listing URL. The listing site blocked price, beds, baths, square feet, and photos, so paste the visible listing facts into the fallback box or enter the remaining fields manually.");
+      } else if (missing.length) {
+        setImportMessage(`${payload.warning ? `${payload.warning} ` : ""}Still missing ${missing.join(", ")}. Paste visible listing facts into the fallback box, then import again.`);
+      } else {
+        setImportMessage(`Listing details filled${payload.images?.length ? ` and ${payload.images.length} photos imported` : ""}.`);
+      }
     } catch (error) {
       setImportStatus("error");
       setImportMessage(error instanceof Error ? error.message : "Import failed.");
