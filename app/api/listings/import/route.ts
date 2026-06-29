@@ -138,9 +138,18 @@ function firstTextNumber(text: string, patterns: RegExp[]) {
   return null;
 }
 
+function firstTextNumberNearLabel(text: string, labels: string[], maxValue = 10000) {
+  const labelPattern = labels.map((label) => label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|");
+  const afterLabel = new RegExp(`\\b(?:${labelPattern})\\b[^0-9]{0,80}(\\d+(?:\\.\\d+)?)`, "i");
+  const beforeLabel = new RegExp(`\\b(\\d+(?:\\.\\d+)?)\\s*(?:${labelPattern})\\b`, "i");
+  const value = firstTextNumber(text, [beforeLabel, afterLabel]);
+  return value !== null && value <= maxValue ? value : null;
+}
+
 function detailsFromPlainText(text: string): PropertyDetails {
   const normalized = decode(text)
     .replace(/<[^>]+>/g, " ")
+    .replace(/[•|]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
 
@@ -155,17 +164,12 @@ function detailsFromPlainText(text: string): PropertyDetails {
     price: priceMatch ? numberValue(priceMatch[0]) : firstTextNumber(normalized, [
       /\b(?:price|list price|sold price)\D{0,24}([\d,]{4,})\b/i
     ]),
-    bedrooms: firstTextNumber(normalized, [
-      /\b(\d+(?:\.\d+)?)\s*(?:beds?|bedrooms?)\b/i,
-      /\b(?:beds?|bedrooms?)\D{0,12}(\d+(?:\.\d+)?)\b/i
-    ]),
-    bathrooms: firstTextNumber(normalized, [
-      /\b(\d+(?:\.\d+)?)\s*(?:baths?|bathrooms?)\b/i,
-      /\b(?:baths?|bathrooms?)\D{0,12}(\d+(?:\.\d+)?)\b/i
-    ]),
+    bedrooms: firstTextNumberNearLabel(normalized, ["beds", "bed", "bedrooms", "bedroom", "bd", "bds"], 50),
+    bathrooms: firstTextNumberNearLabel(normalized, ["baths", "bath", "bathrooms", "bathroom", "ba", "bas"], 50),
     squareFeet: firstTextNumber(normalized, [
-      /\b([\d,]{3,})\s*(?:sq\.?\s*ft\.?|square feet|sqft)\b/i,
-      /\b(?:sq\.?\s*ft\.?|square feet|sqft)\D{0,12}([\d,]{3,})\b/i
+      /\b([\d,]{3,})\s*(?:sq\.?\s*ft\.?|square feet|sqft|sf)\b/i,
+      /\b(?:sq\.?\s*ft\.?|square feet|sqft|sf|living area|interior|finished area|home size)\D{0,80}([\d,]{3,})\b/i,
+      /\b([\d,]{3,})\s*(?:square-foot|square foot)\b/i
     ]),
     description: descriptionMatch?.[1]?.trim() ?? null
   };
@@ -228,9 +232,9 @@ function propertyDetails(html: string): PropertyDetails {
   return {
     address: ldAddress || [embeddedStreet, embeddedCity, embeddedState, embeddedZip].filter(Boolean).join(", ") || null,
     price: numberValue(offers?.price) ?? numberValue(listing?.price) ?? numberValue(property?.price) ?? firstEmbeddedNumber(html, ["list_price", "listPrice", "price"]),
-    bedrooms: numberValue(property?.numberOfBedrooms) ?? firstEmbeddedNumber(html, ["bedrooms", "beds"]),
-    bathrooms: numberValue(property?.numberOfBathroomsTotal) ?? numberValue(property?.numberOfBathrooms) ?? firstEmbeddedNumber(html, ["bathrooms", "baths"]),
-    squareFeet: numberValue(floorSize?.value) ?? firstEmbeddedNumber(html, ["livingArea", "sqft", "squareFeet"]),
+    bedrooms: numberValue(property?.numberOfBedrooms) ?? firstEmbeddedNumber(html, ["numberOfBedrooms", "bedroomsTotal", "bedrooms", "beds"]),
+    bathrooms: numberValue(property?.numberOfBathroomsTotal) ?? numberValue(property?.numberOfBathrooms) ?? firstEmbeddedNumber(html, ["numberOfBathroomsTotal", "numberOfBathrooms", "bathroomsTotalInteger", "bathroomsTotal", "bathrooms", "baths"]),
+    squareFeet: numberValue(floorSize?.value) ?? firstEmbeddedNumber(html, ["livingAreaValue", "livingArea", "livingAreaSqFt", "floorSize", "sqft", "squareFeet"]),
     description: textValue(listing?.description) ?? textValue(property?.description) ?? firstEmbeddedText(html, ["description", "homeDescription"])
   };
 }
