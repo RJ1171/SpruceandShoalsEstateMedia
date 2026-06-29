@@ -34,8 +34,6 @@ type RenderResult = {
   videoUrl: string;
   durationInFrames: number;
   fps: number;
-  estimatedCostLabel?: string;
-  estimatedRenderSeconds?: number;
 };
 
 type ImportedProperty = {
@@ -49,6 +47,19 @@ type ImportedProperty = {
 
 const MIN_PHOTOS = 5;
 const MAX_PHOTOS = 30;
+
+function missingImportedFields(property?: ImportedProperty) {
+  const missing = [
+    ["price", property?.price],
+    ["bedrooms", property?.bedrooms],
+    ["bathrooms", property?.bathrooms],
+    ["square feet", property?.squareFeet]
+  ]
+    .filter(([, value]) => value === null || value === undefined)
+    .map(([label]) => label);
+
+  return missing;
+}
 
 export default function Home() {
   const [photos, setPhotos] = useState<LocalPhoto[]>([]);
@@ -87,6 +98,7 @@ export default function Home() {
       if (!response.ok) throw new Error(payload.error || "Listing import failed.");
 
       const property = payload.property;
+      const missing = missingImportedFields(property);
       if (property?.address) setAddress(property.address);
       if (property?.price) setPrice(new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(property.price));
       if (property?.bedrooms !== null && property?.bedrooms !== undefined) setBeds(String(property.bedrooms));
@@ -105,8 +117,11 @@ export default function Home() {
       const validPhotos = imported.filter((photo): photo is LocalPhoto => photo !== null);
       if (validPhotos.length) setPhotos((current) => [...current, ...validPhotos]);
 
-      setImportStatus("idle");
-      setImportMessage(`${payload.warning ? `${payload.warning} ` : ""}Listing details filled${validPhotos.length ? ` and ${validPhotos.length} photos added` : ""}. Review any fields before rendering.`);
+      setImportStatus(missing.length ? "error" : "idle");
+      setImportMessage(missing.length
+        ? `${payload.warning ? `${payload.warning} ` : ""}Still missing ${missing.join(", ")}. Paste the visible listing facts into the fallback box, then click Auto-fill again.`
+        : `${payload.warning ? `${payload.warning} ` : ""}Listing details filled${validPhotos.length ? ` and ${validPhotos.length} photos added` : ""}. Review any fields before rendering.`
+      );
     } catch (error) {
       setImportStatus("error");
       setImportMessage(error instanceof Error ? error.message : "Listing import failed.");
@@ -397,11 +412,7 @@ export default function Home() {
           {result ? (
             <section className="rounded-lg border border-gold/40 bg-white p-5 shadow-sm">
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-gold">Render complete</p>
-              {result.estimatedCostLabel ? (
-                <p className="mt-2 text-xs font-semibold uppercase tracking-[0.12em] text-charcoal/45">
-                  Estimated platform cost {result.estimatedCostLabel} · {result.estimatedRenderSeconds ?? Math.round(result.durationInFrames / result.fps)}s reel
-                </p>
-              ) : null}
+              <p className="mt-2 text-xs font-semibold uppercase tracking-[0.12em] text-charcoal/45">{Math.round(result.durationInFrames / result.fps)}s listing reel</p>
               <video className="mt-4 aspect-[9/16] max-h-[560px] w-full rounded-md bg-black object-contain" src={result.videoUrl} controls playsInline />
               <a href={result.videoUrl} download className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-md bg-gold px-5 text-sm font-semibold text-forest transition hover:bg-[#d4b36f]"><Download size={17} /> Download MP4</a>
             </section>

@@ -89,6 +89,17 @@ const templates = [
 const tracks = ["Harbor Light", "Quiet Arrival", "Open House", "Coastal Drive"];
 const voices = ["No voiceover", "Warm advisor", "Editorial narrator", "Bright social"];
 
+function missingImportedFields(property?: ImportedProperty) {
+  return [
+    ["price", property?.price],
+    ["bedrooms", property?.bedrooms],
+    ["bathrooms", property?.bathrooms],
+    ["square feet", property?.squareFeet]
+  ]
+    .filter(([, value]) => value === null || value === undefined)
+    .map(([label]) => label);
+}
+
 function orientationClass(orientation: Orientation) {
   if (orientation === "portrait") return "aspect-[9/16] max-h-[560px]";
   if (orientation === "square") return "aspect-square max-h-[520px]";
@@ -222,6 +233,7 @@ export function VideoCreationWorkflow() {
       if (!response.ok) throw new Error(payload.error || "No public listing information found.");
 
       const property = payload.property;
+      const missing = missingImportedFields(property);
       if (property) {
         setDetails((current) => ({
           ...current,
@@ -247,8 +259,11 @@ export function VideoCreationWorkflow() {
           focusY: 50
         }))
       ]);
-      setImportStatus("idle");
-      setImportMessage(`${payload.warning ? `${payload.warning} ` : ""}Listing details filled${payload.images?.length ? ` and ${payload.images.length} photos imported` : ""}.`);
+      setImportStatus(missing.length ? "error" : "idle");
+      setImportMessage(missing.length
+        ? `${payload.warning ? `${payload.warning} ` : ""}Still missing ${missing.join(", ")}. Paste visible listing facts into the fallback box, then import again.`
+        : `${payload.warning ? `${payload.warning} ` : ""}Listing details filled${payload.images?.length ? ` and ${payload.images.length} photos imported` : ""}.`
+      );
     } catch (error) {
       setImportStatus("error");
       setImportMessage(error instanceof Error ? error.message : "Import failed.");

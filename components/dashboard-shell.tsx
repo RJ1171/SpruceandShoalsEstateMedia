@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BarChart3, FolderKanban, Images, LayoutDashboard, Palette, Shield, Video } from "lucide-react";
+import { BarChart3, FolderKanban, Images, LayoutDashboard, Palette, Video } from "lucide-react";
 import { brand } from "../config/brand";
 import { cn } from "@/lib/utils";
 
@@ -8,8 +8,7 @@ const nav = [
   ["Projects", "/dashboard/projects", FolderKanban],
   ["Media", "/dashboard/media", Images],
   ["Brand", "/dashboard/brand", Palette],
-  ["Studio", "/dashboard/studio", Video],
-  ["Admin", "/admin", Shield]
+  ["Studio", "/dashboard/studio", Video]
 ] as const;
 
 export function DashboardShell({ children, title, subtitle }: { children: React.ReactNode; title: string; subtitle?: string }) {

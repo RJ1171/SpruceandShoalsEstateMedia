@@ -61,7 +61,7 @@ export default function AdminPage() {
           <Card key={label} className="p-6">
             <Icon size={24} className="text-gold" />
             <h2 className="mt-4 font-serif text-2xl font-semibold text-pine">{label}</h2>
-            <p className="mt-3 text-sm leading-6 text-charcoal/70">Production module placeholder ready for RBAC, audit logs, and metrics instrumentation.</p>
+            <p className="mt-3 text-sm leading-6 text-charcoal/70">Private operating control for permissions, quality checks, support triage, and growth decisions.</p>
           </Card>
         ))}
       </div>

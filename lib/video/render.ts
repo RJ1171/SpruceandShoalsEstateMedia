@@ -5,7 +5,6 @@ import { readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import type { ListingVideoProps } from "../../remotion/ListingVideo";
-import { estimatedCostPerVideo, formatCurrency } from "../../config/business";
 import { ensurePublicBucket } from "../supabase-server";
 
 declare global {
@@ -92,9 +91,6 @@ export async function renderListingVideo(projectId: string, inputProps: ListingV
     videoUrl: supabase.storage.from("listing-videos").getPublicUrl(videoPath).data.publicUrl,
     durationInFrames: composition.durationInFrames,
     fps: composition.fps,
-    sizeBytes: video.byteLength,
-    estimatedCost: estimatedCostPerVideo,
-    estimatedCostLabel: formatCurrency(estimatedCostPerVideo),
-    estimatedRenderSeconds: Math.round(composition.durationInFrames / composition.fps)
+    sizeBytes: video.byteLength
   };
 }
