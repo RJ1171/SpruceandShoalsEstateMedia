@@ -215,7 +215,10 @@ export default function Home() {
       setMessage("Your vertical listing reel is ready.");
     } catch (error) {
       setStatus("error");
-      setMessage(error instanceof Error ? error.message : "Something went wrong.");
+      const message = error instanceof Error ? error.message : "Something went wrong.";
+      setMessage(/fetch failed|failed to fetch|networkerror/i.test(message)
+        ? "The video render request was cut off before the server returned a result. Try 5-8 smaller photos first; if it still fails, the render needs to run in a background worker instead of a live Vercel request."
+        : message);
     }
   }
 

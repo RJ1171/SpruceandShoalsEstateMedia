@@ -18,7 +18,7 @@ export type ListingVideoProps = {
 
 const PhotoScene = ({ image, index }: { image: ListingVideoImage; index: number }) => {
   const frame = useCurrentFrame();
-  const opacity = interpolate(frame, [0, 12, 48, 60], [0, 1, 1, 0], {
+  const opacity = interpolate(frame, [0, 8, 38, 48], [0, 1, 1, 0], {
     easing: Easing.inOut(Easing.cubic),
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp"
@@ -35,7 +35,7 @@ export const ListingVideo = ({ images, address, price, beds, baths, squareFeet, 
   return (
     <AbsoluteFill style={{ backgroundColor: "#0f2c25", color: "white", fontFamily: "Arial, sans-serif" }}>
       {images.map((image, index) => (
-        <Sequence key={`${image.originalUrl}-${index}`} from={index * 48} durationInFrames={60} premountFor={12}>
+        <Sequence key={`${image.originalUrl}-${index}`} from={index * 40} durationInFrames={48} premountFor={8}>
           <PhotoScene image={image} index={index} />
         </Sequence>
       ))}

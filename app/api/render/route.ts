@@ -22,7 +22,11 @@ const renderSchema = z.object({
 export async function POST(request: Request) {
   try {
     const payload = renderSchema.parse(await request.json());
-    const result = await renderListingVideo(payload.projectId, payload);
+    const renderPayload = {
+      ...payload,
+      images: payload.images.map((image) => ({ originalUrl: image.originalUrl, depthMapUrl: null }))
+    };
+    const result = await renderListingVideo(payload.projectId, renderPayload);
     return NextResponse.json(result);
   } catch (error) {
     if (error instanceof z.ZodError) {
