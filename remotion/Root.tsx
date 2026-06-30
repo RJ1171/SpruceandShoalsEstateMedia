@@ -1,6 +1,6 @@
 import { Composition } from "remotion";
 import { ListingVideo, type ListingVideoProps } from "./ListingVideo";
-import { PortfolioVideo, type PortfolioVideoProps } from "./PortfolioVideo";
+import { PORTFOLIO_SCENE_FRAMES, PORTFOLIO_SCENE_STRIDE, PortfolioVideo, type PortfolioVideoProps } from "./PortfolioVideo";
 
 const defaultProps: ListingVideoProps = {
   images: [
@@ -19,9 +19,12 @@ const defaultProps: ListingVideoProps = {
 
 const portfolioDefaultProps: PortfolioVideoProps = {
   scenes: [
-    { image: "/images/portfolio/atlantic-shingle-estate.png", room: "Exterior" },
+    { image: "/images/portfolio/atlantic-shingle-estate.png", room: "Arrival" },
+    { image: "/images/portfolio/interiors/atlantic-shingle-estate-entrance.png", room: "Entrance" },
     { image: "/images/portfolio/interiors/atlantic-shingle-estate-living-room.png", room: "Living room" },
-    { image: "/images/portfolio/interiors/atlantic-shingle-estate-kitchen.png", room: "Kitchen" }
+    { image: "/images/portfolio/interiors/atlantic-shingle-estate-kitchen.png", room: "Kitchen" },
+    { image: "/images/portfolio/interiors/atlantic-shingle-estate-bedroom.png", room: "Primary bedroom" },
+    { image: "/images/portfolio/interiors/atlantic-shingle-estate-bathroom.png", room: "Primary bath" }
   ],
   title: "Atlantic Shingle Estate",
   label: "Featured residence"
@@ -49,6 +52,9 @@ export const RemotionRoot = () => (
       height={720}
       durationInFrames={432}
       defaultProps={portfolioDefaultProps}
+      calculateMetadata={({ props }) => ({
+        durationInFrames: PORTFOLIO_SCENE_FRAMES + Math.max(0, props.scenes.length - 1) * PORTFOLIO_SCENE_STRIDE
+      })}
     />
     <Composition
       id="PortfolioVideoVertical"
@@ -58,6 +64,9 @@ export const RemotionRoot = () => (
       height={1280}
       durationInFrames={432}
       defaultProps={portfolioDefaultProps}
+      calculateMetadata={({ props }) => ({
+        durationInFrames: PORTFOLIO_SCENE_FRAMES + Math.max(0, props.scenes.length - 1) * PORTFOLIO_SCENE_STRIDE
+      })}
     />
   </>
 );

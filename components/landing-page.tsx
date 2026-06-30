@@ -77,10 +77,10 @@ const faqs = [
   ["Can this support multiple listings?", "The project model is built around reusable listing packages and organization-level media libraries."]
 ];
 
-function ShowcaseCard({ title, label, image, video, description, tall = false }: { title: string; label: string; image: string; video: string; description: string; tall?: boolean }) {
+function ShowcaseCard({ title, label, image, video, description }: { title: string; label: string; image: string; video: string; description: string }) {
   return (
-    <Card className={`group corner-frame overflow-hidden p-3 ${tall ? "md:row-span-2" : ""}`}>
-      <div className={`${tall ? "h-[31rem]" : "h-64"} overflow-hidden rounded-md border border-pine/15 bg-pine`}>
+    <Card className="group corner-frame overflow-hidden p-3">
+      <div className="aspect-video overflow-hidden rounded-md border border-pine/15 bg-pine">
         <video
           className="h-full w-full object-cover"
           controls
@@ -96,7 +96,7 @@ function ShowcaseCard({ title, label, image, video, description, tall = false }:
         <p className="text-xs font-bold uppercase tracking-[0.18em] text-gold">{label}</p>
         <h3 className="mt-3 font-serif text-2xl font-semibold text-pine">{title}</h3>
         <p className="mt-2 text-sm leading-6 text-charcoal/70">{description}</p>
-        <p className="mt-4 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.15em] text-pine/55"><Play size={14} className="text-gold" /> 18-second generated property tour</p>
+          <p className="mt-4 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.15em] text-pine/55"><Play size={14} className="text-gold" /> 24-second room-to-room property tour</p>
       </div>
     </Card>
   );
@@ -200,8 +200,8 @@ export function LandingPage() {
 
       <section id="portfolio" className="mx-auto max-w-7xl px-5 py-20">
         <SectionHeading eyebrow="Portfolio" title="A showcase built like a luxury listing presentation" copy="Original coastal property imagery presented with the restraint, clarity, and polish of a high-end listing campaign." />
-        <div className="mt-12 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-          <ShowcaseCard title="Atlantic Shingle Estate" label="Featured residence" image="/images/portfolio/atlantic-shingle-estate.png" video="/videos/portfolio/atlantic-shingle-estate.mp4" description="A cedar-shingled oceanfront retreat framed by native grasses and broad Atlantic views." tall />
+          <div className="mt-12 grid gap-5 md:grid-cols-2">
+            <ShowcaseCard title="Atlantic Shingle Estate" label="Featured residence" image="/images/portfolio/atlantic-shingle-estate.png" video="/videos/portfolio/atlantic-shingle-estate.mp4" description="A cedar-shingled oceanfront retreat framed by native grasses and broad Atlantic views." />
           <ShowcaseCard title="North Shore Modern" label="Architectural story" image="/images/portfolio/north-shore-modern.png" video="/videos/portfolio/north-shore-modern.mp4" description="Modern coastal lines, weathered materials, and floor-to-ceiling views over a quiet rocky cove." />
           <ShowcaseCard title="Maine at Blue Hour" label="Twilight campaign" image="/images/portfolio/maine-blue-hour.png" video="/videos/portfolio/maine-blue-hour.mp4" description="Warm interior light and cool coastal evening tones designed for a memorable launch moment." />
           <ShowcaseCard title="Cape Cod Glass House" label="Lifestyle presentation" image="/images/portfolio/cape-cod-pool-house.png" video="/videos/portfolio/cape-cod-pool-house.mp4" description="A contemporary beach residence composed around glass, water, dunes, and soft coastal daylight." />
