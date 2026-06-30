@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, DragEvent, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, DragEvent, useMemo, useState } from "react";
 import {
   ArrowRight,
   BadgeCheck,
@@ -15,7 +15,6 @@ import {
   Video,
   X
 } from "lucide-react";
-import { getSupabaseClient } from "../../lib/supabase";
 
 type LocalPhoto = {
   id: string;
@@ -23,17 +22,12 @@ type LocalPhoto = {
   previewUrl: string;
 };
 
-type UploadedPhoto = {
-  path: string;
-  token: string;
-  originalUrl: string;
-  depthMapUrl: string | null;
-};
-
 type RenderResult = {
   videoUrl: string;
   durationInFrames: number;
   fps: number;
+  fileName: string;
+  format: "MP4" | "WebM";
 };
 
 type ImportedProperty = {
@@ -47,6 +41,52 @@ type ImportedProperty = {
 
 const MIN_PHOTOS = 5;
 const MAX_PHOTOS = 30;
+const VIDEO_WIDTH = 540;
+const VIDEO_HEIGHT = 960;
+const VIDEO_FPS = 20;
+const SCENE_SECONDS = 2.5;
+const CROSSFADE_SECONDS = 0.45;
+
+function loadImage(src: string) {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error("One of the uploaded photos could not be read."));
+    image.src = src;
+  });
+}
+
+function drawCoverImage(context: CanvasRenderingContext2D, image: HTMLImageElement, progress: number, direction: number, opacity = 1) {
+  const baseScale = Math.max(VIDEO_WIDTH / image.naturalWidth, VIDEO_HEIGHT / image.naturalHeight);
+  const zoom = 1.06 + progress * 0.08;
+  const width = image.naturalWidth * baseScale * zoom;
+  const height = image.naturalHeight * baseScale * zoom;
+  const overflowX = Math.max(0, width - VIDEO_WIDTH);
+  const overflowY = Math.max(0, height - VIDEO_HEIGHT);
+  const x = -overflowX / 2 + direction * (progress - 0.5) * Math.min(overflowX, 42);
+  const y = -overflowY / 2 - (progress - 0.5) * Math.min(overflowY, 28);
+  context.save();
+  context.globalAlpha = opacity;
+  context.drawImage(image, x, y, width, height);
+  context.restore();
+}
+
+function drawWrappedText(context: CanvasRenderingContext2D, text: string, x: number, y: number, maxWidth: number, lineHeight: number) {
+  const words = text.split(/\s+/);
+  let line = "";
+  let lineY = y;
+  for (const word of words) {
+    const next = line ? `${line} ${word}` : word;
+    if (line && context.measureText(next).width > maxWidth) {
+      context.fillText(line, x, lineY);
+      line = word;
+      lineY += lineHeight;
+    } else {
+      line = next;
+    }
+  }
+  if (line) context.fillText(line, x, lineY);
+}
 
 function missingImportedFields(property?: ImportedProperty) {
   const missing = [
@@ -80,8 +120,6 @@ export default function Home() {
 
   const estimatedSeconds = useMemo(() => photos.length * 2.5 - Math.max(0, photos.length - 1) * 0.5, [photos.length]);
   const canRender = photos.length >= MIN_PHOTOS && photos.length <= MAX_PHOTOS && address.trim() && price.trim() && beds.trim() && baths.trim() && squareFeet.trim() && agentName.trim();
-
-  useEffect(() => () => photos.forEach((photo) => URL.revokeObjectURL(photo.previewUrl)), [photos]);
 
   async function importListing() {
     if (!listingUrl.trim()) return;
@@ -170,55 +208,116 @@ export default function Home() {
 
   async function createVideo() {
     if (!canRender) return;
+    if (typeof MediaRecorder === "undefined" || !HTMLCanvasElement.prototype.captureStream) {
+      setStatus("error");
+      setMessage("This browser cannot create video files. Open the studio in the latest Chrome, Edge, or Safari and try again.");
+      return;
+    }
+
+    if (result?.videoUrl.startsWith("blob:")) URL.revokeObjectURL(result.videoUrl);
     setResult(null);
-    setMessage("Uploading originals and preparing simulated depth maps...");
-    setStatus("uploading");
+    setMessage("Loading photos into the browser renderer...");
+    setStatus("rendering");
 
     try {
-      const uploadResponse = await fetch("/api/upload", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ files: photos.map(({ file }) => ({ name: file.name, type: file.type, size: file.size })) })
+      const images = await Promise.all(photos.map((photo) => loadImage(photo.previewUrl)));
+      const canvas = document.createElement("canvas");
+      canvas.width = VIDEO_WIDTH;
+      canvas.height = VIDEO_HEIGHT;
+      const context = canvas.getContext("2d");
+      if (!context) throw new Error("The browser could not start the video canvas.");
+
+      const mimeCandidates = [
+        { mime: "video/mp4;codecs=avc1.42E01E", format: "MP4" as const, extension: "mp4" },
+        { mime: "video/webm;codecs=vp9", format: "WebM" as const, extension: "webm" },
+        { mime: "video/webm;codecs=vp8", format: "WebM" as const, extension: "webm" },
+        { mime: "video/webm", format: "WebM" as const, extension: "webm" }
+      ];
+      const selected = mimeCandidates.find((candidate) => MediaRecorder.isTypeSupported(candidate.mime));
+      if (!selected) throw new Error("This browser does not support MP4 or WebM video recording.");
+
+      const stream = canvas.captureStream(VIDEO_FPS);
+      const recorder = new MediaRecorder(stream, { mimeType: selected.mime, videoBitsPerSecond: 4_000_000 });
+      const chunks: Blob[] = [];
+      recorder.ondataavailable = (event) => {
+        if (event.data.size) chunks.push(event.data);
+      };
+      const stopped = new Promise<void>((resolve, reject) => {
+        recorder.onstop = () => resolve();
+        recorder.onerror = () => reject(new Error("The browser video recorder stopped unexpectedly."));
       });
-      const upload = await uploadResponse.json() as { projectId?: string; bucket?: string; uploads?: UploadedPhoto[]; error?: string };
-      if (!uploadResponse.ok || !upload.projectId || !upload.bucket || !upload.uploads) throw new Error(upload.error || "Photo upload failed.");
 
-      const supabase = getSupabaseClient();
-      await Promise.all(upload.uploads.map(async (slot, index) => {
-        const { error } = await supabase.storage.from(upload.bucket!).uploadToSignedUrl(slot.path, slot.token, photos[index].file, {
-          contentType: photos[index].file.type
-        });
-        if (error) throw error;
-      }));
+      const totalSeconds = images.length * SCENE_SECONDS - Math.max(0, images.length - 1) * CROSSFADE_SECONDS;
+      setMessage(`Creating a ${Math.round(totalSeconds)} second reel on this device. Keep this tab open...`);
+      recorder.start(1000);
+      const startedAt = performance.now();
 
-      setStatus("rendering");
-      setMessage("Rendering 9:16 MP4 with parallax motion and crossfades...");
-      const renderResponse = await fetch("/api/render", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          projectId: upload.projectId,
-          images: upload.uploads.map(({ originalUrl, depthMapUrl }) => ({ originalUrl, depthMapUrl })),
-          address,
-          price,
-          beds,
-          baths,
-          squareFeet,
-          agentName
-        })
+      await new Promise<void>((resolve) => {
+        const paintFrame = (now: number) => {
+          const elapsed = Math.min((now - startedAt) / 1000, totalSeconds);
+          const sceneStride = SCENE_SECONDS - CROSSFADE_SECONDS;
+          const index = Math.min(images.length - 1, Math.floor(elapsed / sceneStride));
+          const sceneTime = elapsed - index * sceneStride;
+          const progress = Math.min(1, sceneTime / SCENE_SECONDS);
+          const fade = index < images.length - 1 && sceneTime > sceneStride
+            ? Math.min(1, (sceneTime - sceneStride) / CROSSFADE_SECONDS)
+            : 0;
+
+          context.fillStyle = "#0f2c25";
+          context.fillRect(0, 0, VIDEO_WIDTH, VIDEO_HEIGHT);
+          drawCoverImage(context, images[index], progress, index % 2 === 0 ? 1 : -1, 1);
+          if (fade > 0) drawCoverImage(context, images[index + 1], fade * 0.18, index % 2 === 0 ? -1 : 1, fade);
+
+          const gradient = context.createLinearGradient(0, 320, 0, VIDEO_HEIGHT);
+          gradient.addColorStop(0, "rgba(10,25,21,0)");
+          gradient.addColorStop(1, "rgba(10,25,21,0.92)");
+          context.fillStyle = gradient;
+          context.fillRect(0, 0, VIDEO_WIDTH, VIDEO_HEIGHT);
+
+          context.fillStyle = "#ffffff";
+          context.font = "600 18px Georgia, serif";
+          context.fillText("SPRUCE & SHOALS", 36, 55);
+          context.strokeStyle = "rgba(255,255,255,0.55)";
+          context.strokeRect(405, 32, 99, 34);
+          context.font = "600 10px Arial, sans-serif";
+          context.fillText("NEW LISTING", 421, 53);
+          context.fillStyle = "#c8a45d";
+          context.fillRect(36, 720, 48, 3);
+          context.font = "700 20px Arial, sans-serif";
+          context.fillText(price, 36, 758);
+          context.fillStyle = "#ffffff";
+          context.font = "600 34px Georgia, serif";
+          drawWrappedText(context, address, 36, 806, 465, 39);
+          context.font = "600 15px Arial, sans-serif";
+          context.fillText(`${beds} BEDS  |  ${baths} BATHS  |  ${squareFeet} SQ FT`, 36, 884);
+          context.fillStyle = "rgba(255,255,255,0.82)";
+          context.font = "14px Arial, sans-serif";
+          context.fillText(`Presented by ${agentName}`, 36, 921);
+
+          if (elapsed >= totalSeconds) resolve();
+          else requestAnimationFrame(paintFrame);
+        };
+        requestAnimationFrame(paintFrame);
       });
-      const render = await renderResponse.json() as RenderResult & { error?: string };
-      if (!renderResponse.ok || !render.videoUrl) throw new Error(render.error || "Video rendering failed.");
 
-      setResult(render);
+      recorder.stop();
+      await stopped;
+      stream.getTracks().forEach((track) => track.stop());
+      const blob = new Blob(chunks, { type: selected.mime });
+      if (!blob.size) throw new Error("The browser created an empty video. Try again in Chrome or Edge.");
+      const videoUrl = URL.createObjectURL(blob);
+      setResult({
+        videoUrl,
+        durationInFrames: Math.round(totalSeconds * VIDEO_FPS),
+        fps: VIDEO_FPS,
+        fileName: `spruce-shoals-listing-reel.${selected.extension}`,
+        format: selected.format
+      });
       setStatus("complete");
-      setMessage("Your vertical listing reel is ready.");
+      setMessage(`Your vertical ${selected.format} listing reel is ready.`);
     } catch (error) {
       setStatus("error");
-      const message = error instanceof Error ? error.message : "Something went wrong.";
-      setMessage(/fetch failed|failed to fetch|networkerror/i.test(message)
-        ? "The video render request was cut off before the server returned a result. Try 5-8 smaller photos first; if it still fails, the render needs to run in a background worker instead of a live Vercel request."
-        : message);
+      setMessage(error instanceof Error ? error.message : "Something went wrong.");
     }
   }
 
@@ -398,7 +497,7 @@ export default function Home() {
           <section className="rounded-lg border border-pine/15 bg-white p-5 shadow-sm">
             <div className="flex items-center gap-3">
               <span className="flex h-10 w-10 items-center justify-center rounded-md bg-pine text-gold"><Sparkles size={19} /></span>
-              <div><p className="font-semibold text-pine">Render vertical MP4</p><p className="text-sm text-charcoal/50">Remotion + FFmpeg · H.264</p></div>
+              <div><p className="font-semibold text-pine">Create vertical video</p><p className="text-sm text-charcoal/50">Private in-browser render · MP4 when supported</p></div>
             </div>
             <div className="mt-5 space-y-3 text-sm text-charcoal/65">
               {["Slow forward zoom and alternating pan", "Three simulated depth layers", "Smooth 15-frame crossfades", "Address, price, specs, and agent overlay"].map((item) => <div key={item} className="flex items-center gap-2"><BadgeCheck size={16} className="shrink-0 text-gold" />{item}</div>)}
@@ -421,7 +520,7 @@ export default function Home() {
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-gold">Render complete</p>
               <p className="mt-2 text-xs font-semibold uppercase tracking-[0.12em] text-charcoal/45">{Math.round(result.durationInFrames / result.fps)}s listing reel</p>
               <video className="mt-4 aspect-[9/16] max-h-[560px] w-full rounded-md bg-black object-contain" src={result.videoUrl} controls playsInline />
-              <a href={result.videoUrl} download className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-md bg-gold px-5 text-sm font-semibold text-forest transition hover:bg-[#d4b36f]"><Download size={17} /> Download MP4</a>
+              <a href={result.videoUrl} download={result.fileName} className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-md bg-gold px-5 text-sm font-semibold text-forest transition hover:bg-[#d4b36f]"><Download size={17} /> Download {result.format}</a>
             </section>
           ) : null}
         </aside>
