@@ -16,11 +16,12 @@ import {
   Plus,
   RotateCcw,
   Save,
+  Send,
   Trash2
 } from "lucide-react";
-import type { HotspotDirection, TourHotspot, TourRoom } from "../types/virtual-tour";
+import type { HotspotDirection, PublishedTour, TourHotspot, TourProperty, TourRoom } from "../types/virtual-tour";
 
-const defaultRooms: TourRoom[] = [
+export const defaultTourRooms: TourRoom[] = [
   {
     id: "entrance",
     name: "Entrance",
@@ -62,6 +63,21 @@ const defaultRooms: TourRoom[] = [
   }
 ];
 
+export const defaultTourProperty: TourProperty = {
+  address: "18 Harbor View Road, Newburyport, MA",
+  price: "$1,895,000",
+  beds: "4",
+  baths: "3.5",
+  squareFeet: "3,280",
+  agentName: "Rocco Fiacchino",
+  agentPhone: "(603) 260-8166",
+  agentEmail: "Roccofiacchino@gmail.com"
+};
+
+function tourSlug(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "featured-estate";
+}
+
 const directionIcons = {
   forward: ArrowUp,
   back: ArrowDown,
@@ -74,9 +90,10 @@ function clamp(value: number) {
 }
 
 export function VirtualTourStudio({ embedded = false }: { embedded?: boolean }) {
-  const [rooms, setRooms] = useState<TourRoom[]>(defaultRooms);
-  const [currentRoomId, setCurrentRoomId] = useState(defaultRooms[0].id);
-  const [selectedRoomId, setSelectedRoomId] = useState(defaultRooms[0].id);
+  const [rooms, setRooms] = useState<TourRoom[]>(defaultTourRooms);
+  const [property, setProperty] = useState<TourProperty>(defaultTourProperty);
+  const [currentRoomId, setCurrentRoomId] = useState(defaultTourRooms[0].id);
+  const [selectedRoomId, setSelectedRoomId] = useState(defaultTourRooms[0].id);
   const [selectedHotspotId, setSelectedHotspotId] = useState<string | null>(null);
   const [history, setHistory] = useState<string[]>([]);
   const [mode, setMode] = useState<"view" | "edit">("view");
@@ -84,6 +101,7 @@ export function VirtualTourStudio({ embedded = false }: { embedded?: boolean }) 
   const [ambientMotion, setAmbientMotion] = useState(true);
   const [mapOpen, setMapOpen] = useState(!embedded);
   const [saved, setSaved] = useState(false);
+  const [publishedUrl, setPublishedUrl] = useState("");
   const [draggingHotspotId, setDraggingHotspotId] = useState<string | null>(null);
   const tourRef = useRef<HTMLDivElement>(null);
 
@@ -190,6 +208,19 @@ export function VirtualTourStudio({ embedded = false }: { embedded?: boolean }) 
     else await document.exitFullscreen();
   }
 
+  async function publishTour() {
+    const slug = tourSlug(property.address);
+    const tour: PublishedTour = { slug, rooms, property, publishedAt: new Date().toISOString() };
+    localStorage.setItem(`spruce-shoals-published-tour:${slug}`, JSON.stringify(tour));
+    const url = `${window.location.origin}/tour/${slug}`;
+    setPublishedUrl(url);
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      // The URL remains visible if clipboard permission is unavailable.
+    }
+  }
+
   if (!currentRoom || !selectedRoom) return null;
 
   const displayRoom = mode === "edit" ? selectedRoom : currentRoom;
@@ -212,8 +243,13 @@ export function VirtualTourStudio({ embedded = false }: { embedded?: boolean }) 
           <button onClick={() => { localStorage.setItem("spruce-shoals-tour", JSON.stringify(rooms.filter((room) => !room.imageUrl.startsWith("blob:")))); setSaved(true); }} className="inline-flex h-10 items-center gap-2 rounded-md bg-gold px-4 text-sm font-semibold text-forest">
             <Save size={16} /> {saved ? "Saved" : "Save tour"}
           </button>
+          <button onClick={publishTour} className="inline-flex h-10 items-center gap-2 rounded-md bg-pine px-4 text-sm font-semibold text-white">
+            <Send size={16} /> Publish
+          </button>
         </div>
       </div> : null}
+
+      {!embedded && publishedUrl ? <div className="flex flex-col gap-2 rounded-md border border-gold/35 bg-white px-4 py-3 text-sm text-pine sm:flex-row sm:items-center sm:justify-between"><span className="min-w-0 truncate">Published: {publishedUrl}</span><a href={publishedUrl} className="shrink-0 font-semibold text-gold">Open public tour</a></div> : null}
 
       <div className={`grid gap-5 ${mode === "edit" ? "xl:grid-cols-[240px_minmax(0,1fr)_280px]" : "xl:grid-cols-[minmax(0,1fr)_280px]"}`}>
         {mode === "edit" ? (
@@ -322,6 +358,17 @@ export function VirtualTourStudio({ embedded = false }: { embedded?: boolean }) 
             </div>
           ) : null}
 
+          {mode === "edit" ? (
+            <div className="rounded-lg border border-pine/15 bg-white p-5 shadow-sm">
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-gold">Listing details</p>
+              <div className="mt-4 space-y-3">
+                {([
+                  ["Address", "address"], ["Price", "price"], ["Beds", "beds"], ["Baths", "baths"], ["Square feet", "squareFeet"], ["Agent", "agentName"], ["Phone", "agentPhone"], ["Email", "agentEmail"]
+                ] as const).map(([label, key]) => <label key={key} className="block text-xs font-semibold text-charcoal/60">{label}<input value={property[key]} onChange={(event) => setProperty((current) => ({ ...current, [key]: event.target.value }))} className="mt-1 h-9 w-full rounded-md border border-pine/20 px-3 text-sm text-pine outline-none focus:border-gold" /></label>)}
+              </div>
+            </div>
+          ) : null}
+
           <div className="rounded-lg border border-pine/15 bg-white p-5 shadow-sm">
             <div className="flex items-center justify-between"><p className="text-xs font-bold uppercase tracking-[0.18em] text-gold">Room map</p><Map size={17} className="text-pine/45" /></div>
             <div className="relative mt-5 space-y-2 before:absolute before:bottom-4 before:left-[17px] before:top-4 before:w-px before:bg-gold/40">
@@ -332,7 +379,7 @@ export function VirtualTourStudio({ embedded = false }: { embedded?: boolean }) 
                 </button>
               ))}
             </div>
-            {!embedded ? <button onClick={() => { setRooms(defaultRooms); setSelectedRoomId(defaultRooms[0].id); setCurrentRoomId(defaultRooms[0].id); setHistory([]); }} className="mt-4 flex h-9 w-full items-center justify-center gap-2 rounded-md border border-pine/15 text-xs font-semibold text-pine"><RotateCcw size={14} /> Reset example tour</button> : null}
+            {!embedded ? <button onClick={() => { setRooms(defaultTourRooms); setProperty(defaultTourProperty); setSelectedRoomId(defaultTourRooms[0].id); setCurrentRoomId(defaultTourRooms[0].id); setHistory([]); }} className="mt-4 flex h-9 w-full items-center justify-center gap-2 rounded-md border border-pine/15 text-xs font-semibold text-pine"><RotateCcw size={14} /> Reset example tour</button> : null}
           </div>
         </aside>
       </div>

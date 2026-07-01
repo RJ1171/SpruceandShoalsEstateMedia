@@ -15,3 +15,21 @@ export type TourRoom = {
   imageUrl: string;
   hotspots: TourHotspot[];
 };
+
+export type TourProperty = {
+  address: string;
+  price: string;
+  beds: string;
+  baths: string;
+  squareFeet: string;
+  agentName: string;
+  agentPhone: string;
+  agentEmail: string;
+};
+
+export type PublishedTour = {
+  slug: string;
+  rooms: TourRoom[];
+  property: TourProperty;
+  publishedAt: string;
+};
