@@ -25,6 +25,7 @@ import { brand } from "../config/brand";
 import { buttonClassName } from "./ui/button";
 import { Card } from "./ui/card";
 import { SectionHeading } from "./section-heading";
+import { VirtualTourStudio } from "./virtual-tour-studio";
 
 type IconCard = [string, string, LucideIcon];
 
@@ -200,7 +201,14 @@ export function LandingPage() {
 
       <section id="portfolio" className="mx-auto max-w-7xl px-5 py-20">
         <SectionHeading eyebrow="Portfolio" title="A showcase built like a luxury listing presentation" copy="Original coastal property imagery presented with the restraint, clarity, and polish of a high-end listing campaign." />
-          <div className="mt-12 grid gap-5 md:grid-cols-2">
+        <div className="mt-12">
+          <VirtualTourStudio embedded />
+        </div>
+        <div className="mt-16 border-t border-gold/30 pt-12">
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-gold">Generated walkthrough films</p>
+          <h3 className="mt-3 font-serif text-3xl font-semibold text-pine md:text-4xl">Room-to-room stories for every listing style</h3>
+        </div>
+        <div className="mt-8 grid gap-5 md:grid-cols-2">
             <ShowcaseCard title="Atlantic Shingle Estate" label="Featured residence" image="/images/portfolio/atlantic-shingle-estate.png" video="/videos/portfolio/atlantic-shingle-estate.mp4" description="A cedar-shingled oceanfront retreat framed by native grasses and broad Atlantic views." />
           <ShowcaseCard title="North Shore Modern" label="Architectural story" image="/images/portfolio/north-shore-modern.png" video="/videos/portfolio/north-shore-modern.mp4" description="Modern coastal lines, weathered materials, and floor-to-ceiling views over a quiet rocky cove." />
           <ShowcaseCard title="Maine at Blue Hour" label="Twilight campaign" image="/images/portfolio/maine-blue-hour.png" video="/videos/portfolio/maine-blue-hour.mp4" description="Warm interior light and cool coastal evening tones designed for a memorable launch moment." />

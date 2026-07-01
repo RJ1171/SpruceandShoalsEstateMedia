@@ -73,7 +73,7 @@ function clamp(value: number) {
   return Math.max(3, Math.min(97, value));
 }
 
-export function VirtualTourStudio() {
+export function VirtualTourStudio({ embedded = false }: { embedded?: boolean }) {
   const [rooms, setRooms] = useState<TourRoom[]>(defaultRooms);
   const [currentRoomId, setCurrentRoomId] = useState(defaultRooms[0].id);
   const [selectedRoomId, setSelectedRoomId] = useState(defaultRooms[0].id);
@@ -82,7 +82,7 @@ export function VirtualTourStudio() {
   const [mode, setMode] = useState<"view" | "edit">("view");
   const [transition, setTransition] = useState<{ x: number; y: number } | null>(null);
   const [ambientMotion, setAmbientMotion] = useState(true);
-  const [mapOpen, setMapOpen] = useState(true);
+  const [mapOpen, setMapOpen] = useState(!embedded);
   const [saved, setSaved] = useState(false);
   const [draggingHotspotId, setDraggingHotspotId] = useState<string | null>(null);
   const tourRef = useRef<HTMLDivElement>(null);
@@ -196,7 +196,7 @@ export function VirtualTourStudio() {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-col justify-between gap-4 border-b border-pine/15 pb-5 sm:flex-row sm:items-center">
+      {!embedded ? <div className="flex flex-col justify-between gap-4 border-b border-pine/15 pb-5 sm:flex-row sm:items-center">
         <div className="inline-flex w-fit rounded-md border border-pine/15 bg-white p-1 shadow-sm">
           {(["view", "edit"] as const).map((item) => (
             <button key={item} onClick={() => setMode(item)} className={`flex h-9 items-center gap-2 rounded px-4 text-sm font-semibold capitalize transition ${mode === item ? "bg-pine text-white" : "text-charcoal/60 hover:text-pine"}`}>
@@ -213,7 +213,7 @@ export function VirtualTourStudio() {
             <Save size={16} /> {saved ? "Saved" : "Save tour"}
           </button>
         </div>
-      </div>
+      </div> : null}
 
       <div className={`grid gap-5 ${mode === "edit" ? "xl:grid-cols-[240px_minmax(0,1fr)_280px]" : "xl:grid-cols-[minmax(0,1fr)_280px]"}`}>
         {mode === "edit" ? (
@@ -332,7 +332,7 @@ export function VirtualTourStudio() {
                 </button>
               ))}
             </div>
-            <button onClick={() => { setRooms(defaultRooms); setSelectedRoomId(defaultRooms[0].id); setCurrentRoomId(defaultRooms[0].id); setHistory([]); }} className="mt-4 flex h-9 w-full items-center justify-center gap-2 rounded-md border border-pine/15 text-xs font-semibold text-pine"><RotateCcw size={14} /> Reset example tour</button>
+            {!embedded ? <button onClick={() => { setRooms(defaultRooms); setSelectedRoomId(defaultRooms[0].id); setCurrentRoomId(defaultRooms[0].id); setHistory([]); }} className="mt-4 flex h-9 w-full items-center justify-center gap-2 rounded-md border border-pine/15 text-xs font-semibold text-pine"><RotateCcw size={14} /> Reset example tour</button> : null}
           </div>
         </aside>
       </div>
